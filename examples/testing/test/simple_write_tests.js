@@ -15,6 +15,7 @@
  */
 
 const firebase = require('firebase');
+const util = require("@firebase/util");
 const _ = require('firebase/firestore');
 
 function invert(pr) {
@@ -26,6 +27,16 @@ function invert(pr) {
   });
 }
 
+function fakeToken(auth) {
+  var header = { alg: "RS256", kid: "fakekid" }
+  var claims = { sub: "alice", email: "alice@fblocal.com" }
+  return [
+    util.base64.encodeString(JSON.stringify(header)),
+    util.base64.encodeString(JSON.stringify(claims)),
+    "fakesignature"
+  ].join(".");
+}
+
 // firebase.firestore.setLogLevel("debug");
 afterEach(function() {
   firebase.apps.forEach(app => app.delete());
@@ -35,7 +46,11 @@ describe('my rules', function() {
   after;
   it('should not let anyone write anything', async function() {
     var app = firebase.initializeApp({ projectId: 'test' });
-    var db = firebase.firestore();
+    var FAKE_AUTH_TOKEN = fakeToken({ "sub": "alice" });
+    app.INTERNAL.getToken = function () {
+        return Promise.resolve({ accessToken: FAKE_AUTH_TOKEN });
+    };
+    var db = app.firestore();
     db.settings({
       host: 'localhost:8080',
       ssl: false,
