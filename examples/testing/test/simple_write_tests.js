@@ -18,6 +18,12 @@ const firebase = require('firebase');
 const util = require('@firebase/util');
 const _ = require('firebase/firestore');
 
+
+process.on('unhandledRejection', error => {
+  console.log('unhandledRejection', error);
+});
+
+
 function invert(pr) {
   return new Promise((resolve, reject) => {
     pr.then(
@@ -43,7 +49,6 @@ afterEach(function() {
 });
 
 describe('my rules', function() {
-  after;
   it('should not let anyone write anything', async function() {
     var app = firebase.initializeApp({ projectId: 'test' });
     var FAKE_AUTH_TOKEN = fakeToken({ sub: 'alice' });

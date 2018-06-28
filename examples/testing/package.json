@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@firebase/firestore": "^0.5.5",
     "firebase": "^5.1.0",
     "mocha": "^5.2.0"
   },
