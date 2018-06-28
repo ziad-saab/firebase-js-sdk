@@ -18,11 +18,9 @@ const firebase = require('firebase');
 const util = require('@firebase/util');
 const _ = require('firebase/firestore');
 
-
 process.on('unhandledRejection', error => {
   console.log('unhandledRejection', error);
 });
-
 
 function invert(pr) {
   return new Promise((resolve, reject) => {
