@@ -37,7 +37,7 @@ const EMULATOR = PROTOS['google']['firestore']['emulator']['v1'];
 /** If this environment variable is set, use it for the database emulator's address. */
 const DATABASE_ADDRESS_ENV: string = 'FIREBASE_DATABASE_EMULATOR_ADDRESS';
 /** The default address for the local database emulator. */
-const DATABASE_ADDRESS_DEFAULT: string = 'localhost:9000';
+const DATABASE_ADDRESS_DEFAULT: string = '127.0.0.1:9000';
 /** The actual address for the database emulator */
 const DATABASE_ADDRESS: string =
   process.env[DATABASE_ADDRESS_ENV] || DATABASE_ADDRESS_DEFAULT;
@@ -45,7 +45,7 @@ const DATABASE_ADDRESS: string =
 /** If this environment variable is set, use it for the Firestore emulator. */
 const FIRESTORE_ADDRESS_ENV: string = 'FIREBASE_FIRESTORE_EMULATOR_ADDRESS';
 /** The default address for the local Firestore emulator. */
-const FIRESTORE_ADDRESS_DEFAULT: string = 'localhost:8080';
+const FIRESTORE_ADDRESS_DEFAULT: string = '127.0.0.1:8080';
 /** The actual address for the Firestore emulator */
 const FIRESTORE_ADDRESS: string =
   process.env[FIRESTORE_ADDRESS_ENV] || FIRESTORE_ADDRESS_DEFAULT;
