@@ -134,17 +134,17 @@ const contains = function(obj, key) {
 };
 
 class FirebaseAppImpl implements FirebaseApp {
-  private options_: FirebaseOptions;
-  private name_: string;
-  private isDeleted_ = false;
+  private _options: FirebaseOptions;
+  private _name: string;
+  private _isDeleted = false;
 
   private automaticDataCollectionEnabled_: boolean;
 
   constructor(options: FirebaseOptions, config: FirebaseAppConfig) {
-    this.name_ = config.name!;
+    this._name = config.name!;
     this.automaticDataCollectionEnabled_ =
       config.automaticDataCollectionEnabled || false;
-    this.options_ = deepCopy<FirebaseOptions>(options);
+    this._options = deepCopy<FirebaseOptions>(options);
   }
 
   get automaticDataCollectionEnabled(): boolean {
@@ -159,23 +159,23 @@ class FirebaseAppImpl implements FirebaseApp {
 
   get name(): string {
     this.checkDestroyed_();
-    return this.name_;
+    return this._name;
   }
 
   get options(): FirebaseOptions {
     this.checkDestroyed_();
-    return this.options_;
+    return this._options;
   }
 
   get isDeleted(): boolean {
-    return this.isDeleted_;
+    return this._isDeleted;
   }
 
   /**
    * @internal
    */
   set isDeleted(val: boolean) {
-    this.isDeleted_ = val;
+    this._isDeleted = val;
   }
 
   /**
@@ -183,8 +183,8 @@ class FirebaseAppImpl implements FirebaseApp {
    * use before performing API actions on the App.
    */
   private checkDestroyed_(): void {
-    if (this.isDeleted_) {
-      throw error(AppError.AppDeleted, { name: this.name_ });
+    if (this._isDeleted) {
+      throw error(AppError.AppDeleted, { name: this._name });
     }
   }
 }
