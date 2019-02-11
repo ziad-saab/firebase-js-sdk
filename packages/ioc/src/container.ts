@@ -6,7 +6,7 @@ export interface ServiceFactory<T = any> {
   (app: FirebaseApp, instanceName?: string): T;
 }
 
-interface GetOptions {
+export interface GetOptions {
   instanceName: string;
 }
 

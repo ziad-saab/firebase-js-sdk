@@ -22,6 +22,7 @@ import {
 } from '@firebase/app-types';
 import { AppHook } from '@firebase/app-types/private';
 import { deepCopy, ErrorFactory, FirebaseError } from '@firebase/util';
+import { Container, CONTAINER_KEY } from '@firebase/ioc';
 
 const apps: { [name: string]: FirebaseApp } = {};
 const appHooks: { [name: string]: AppHook } = {};
@@ -129,7 +130,7 @@ function callAppHooks(app: FirebaseApp, eventName: AppEvent) {
   });
 }
 
-const contains = function(obj, key) {
+const contains = function (obj, key) {
   return Object.prototype.hasOwnProperty.call(obj, key);
 };
 
@@ -137,6 +138,7 @@ class FirebaseAppImpl implements FirebaseApp {
   private _options: FirebaseOptions;
   private _name: string;
   private _isDeleted = false;
+  private [CONTAINER_KEY]: Container;
 
   private automaticDataCollectionEnabled_: boolean;
 
@@ -145,6 +147,11 @@ class FirebaseAppImpl implements FirebaseApp {
     this.automaticDataCollectionEnabled_ =
       config.automaticDataCollectionEnabled || false;
     this._options = deepCopy<FirebaseOptions>(options);
+
+    /**
+     * create IOC container for this app instance
+     */
+    this[CONTAINER_KEY] = new Container(this);
   }
 
   get automaticDataCollectionEnabled(): boolean {

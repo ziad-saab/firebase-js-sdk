@@ -40,14 +40,5 @@ export default [
     ],
     plugins,
     external: id => deps.some(dep => id === dep || id.startsWith(`${dep}/`))
-  },
-  /**
-   * Node.js Build
-   */
-  {
-    input: 'index.node.ts',
-    output: [{ file: pkg.main, format: 'cjs' }],
-    plugins,
-    external: id => deps.some(dep => id === dep || id.startsWith(`${dep}/`))
   }
 ];
