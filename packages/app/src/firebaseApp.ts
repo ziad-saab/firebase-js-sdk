@@ -130,7 +130,7 @@ function callAppHooks(app: FirebaseApp, eventName: AppEvent) {
   });
 }
 
-const contains = function (obj, key) {
+const contains = function(obj, key) {
   return Object.prototype.hasOwnProperty.call(obj, key);
 };
 

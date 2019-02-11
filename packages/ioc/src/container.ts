@@ -1,4 +1,3 @@
-
 import { FirebaseApp } from '@firebase/app-types';
 import { Deferred } from '@firebase/util';
 
@@ -19,12 +18,11 @@ const registrations: { [name: string]: ServiceFactory } = {};
 const containerInstances = [];
 
 export class Container {
-
   static get instances(): Container[] {
     return containerInstances;
   }
 
-  static get registrations(): { [name: string]: ServiceFactory} {
+  static get registrations(): { [name: string]: ServiceFactory } {
     return registrations;
   }
 
@@ -36,15 +34,15 @@ export class Container {
    */
   private _serviceInstanceCache: {
     [serviceName: string]: {
-      [instanceName: string]: any
-    }
+      [instanceName: string]: any;
+    };
   } = {};
 
   constructor(private _app: FirebaseApp) {
     containerInstances.push(this);
 
     // register existing service factories on this container
-    Object.keys(Container.registrations).forEach((key) => {
+    Object.keys(Container.registrations).forEach(key => {
       this.register(key, Container.registrations[key]);
     });
   }
@@ -66,7 +64,6 @@ export class Container {
       delete this._pendingRegistration[name];
     }
   }
-
 
   async get<T = any>(serviceName: string, options: GetOptions): Promise<T> {
     const instanceName = options.instanceName || DEFAULT_SERVICE_INSTANCE_NAME;
@@ -95,7 +92,10 @@ export class Container {
       return cachedInstance;
     }
 
-    if (this._serviceInstanceCache[serviceName] && this._serviceInstanceCache[serviceName][instanceName]) {
+    if (
+      this._serviceInstanceCache[serviceName] &&
+      this._serviceInstanceCache[serviceName][instanceName]
+    ) {
       return this._serviceInstanceCache[serviceName][instanceName];
     }
 
@@ -112,7 +112,10 @@ export class Container {
   }
 
   private _getFromCache(serviceName: string, instanceName: string): any {
-    if (this._serviceInstanceCache[serviceName] && this._serviceInstanceCache[serviceName][instanceName]) {
+    if (
+      this._serviceInstanceCache[serviceName] &&
+      this._serviceInstanceCache[serviceName][instanceName]
+    ) {
       return this._serviceInstanceCache[serviceName][instanceName];
     }
   }
