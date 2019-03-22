@@ -1,0 +1,7 @@
+{
+    "mode": "modules",
+    "out": "docs",
+    "excludeNotExported": true,
+    "includeDeclarations": true,
+    "entryPoint": "\"Projects/firebase-js-sdk/packages/app/index\""
+}

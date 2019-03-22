@@ -44,9 +44,6 @@ const pkgsByName = {
 const plugins = [
   sourcemaps(),
   resolveModule(),
-  typescript({
-    typescript: require('typescript')
-  }),
   commonjs()
 ];
 
@@ -70,7 +67,10 @@ const appBuilds = [
       { file: resolve('app', appPkg.main), format: 'cjs', sourcemap: true },
       { file: resolve('app', appPkg.module), format: 'es', sourcemap: true }
     ],
-    plugins,
+    plugins: [...plugins,
+    typescript({
+      tsconfig: './app/tsconfig.json'
+    })],
     external
   },
   /**
@@ -84,7 +84,7 @@ const appBuilds = [
       format: 'umd',
       name: GLOBAL_NAME
     },
-    plugins: [...plugins, uglify()]
+    plugins: [...plugins, typescript(), uglify()]
   }
 ];
 
@@ -114,7 +114,9 @@ const componentBuilds = components
             sourcemap: true
           }
         ],
-        plugins,
+        plugins: [...plugins, typescript({
+          tsconfig: `./${component}/tsconfig.json`
+        })],
         external
       },
       {
@@ -149,7 +151,7 @@ const componentBuilds = components
               );
             }`
         },
-        plugins: [...plugins, uglify()],
+        plugins: [...plugins, typescript(), uglify()],
         external: ['@firebase/app']
       }
     ];
