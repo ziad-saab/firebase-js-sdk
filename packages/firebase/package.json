@@ -29,7 +29,8 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "ts:def": "tsc --declaration --outDir . --emitDeclarationOnly"
   },
   "main": "dist/index.node.cjs.js",
   "browser": "dist/index.cjs.js",
