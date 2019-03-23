@@ -47,6 +47,8 @@ const plugins = [
   commonjs()
 ];
 
+const tsInstance = typescript();
+
 const external = Object.keys(pkg.dependencies || {});
 
 /**
@@ -84,7 +86,7 @@ const appBuilds = [
       format: 'umd',
       name: GLOBAL_NAME
     },
-    plugins: [...plugins, typescript(), uglify()]
+    plugins: [...plugins, tsInstance, uglify()]
   }
 ];
 
@@ -151,7 +153,7 @@ const componentBuilds = components
               );
             }`
         },
-        plugins: [...plugins, typescript(), uglify()],
+        plugins: [...plugins, tsInstance, uglify()],
         external: ['@firebase/app']
       }
     ];
@@ -182,7 +184,7 @@ const completeBuilds = [
       sourcemap: true,
       name: GLOBAL_NAME
     },
-    plugins: [...plugins, typescript(), uglify()]
+    plugins: [...plugins, tsInstance, uglify()]
   },
   /**
    * App Node.js Builds
@@ -190,7 +192,7 @@ const completeBuilds = [
   {
     input: 'src/index.node.ts',
     output: { file: pkg.main, format: 'cjs', sourcemap: true },
-    plugins: [...plugins, typescript()],
+    plugins: [...plugins, tsInstance],
     external
   },
   /**
@@ -199,7 +201,7 @@ const completeBuilds = [
   {
     input: 'src/index.rn.ts',
     output: { file: pkg['react-native'], format: 'cjs', sourcemap: true },
-    plugins: [...plugins, typescript()],
+    plugins: [...plugins, tsInstance],
     external
   }
 ];
