@@ -36,13 +36,13 @@ import * as firebase from 'firebase/app';
 import 'firebase/<PACKAGE>';
 `);
 
-import firebase from '../app';
+import firebase from '@firebase/app';
 
-import '../auth';
-import '../database';
-import '../firestore';
-import '../functions';
-import '../messaging';
-import '../storage';
+import '@firebase/auth';
+import '@firebase/database';
+import '@firebase/firestore';
+import '@firebase/functions';
+import '@firebase/messaging';
+import '@firebase/storage';
 
 export default firebase;

@@ -26,13 +26,13 @@ For the CDN builds, these are available in the following manner
 https://www.gstatic.com/firebasejs/5.0.0/firebase-<PACKAGE>.js
 `);
 
-import firebase from '../app';
+import firebase from '@firebase/app';
 
-import '../auth';
-import '../database';
-import '../firestore';
-import '../functions';
-import '../messaging';
-import '../storage';
+import '@firebase/auth';
+import '@firebase/database';
+import '@firebase/firestore';
+import '@firebase/functions';
+import '@firebase/messaging';
+import '@firebase/storage';
 
 export default firebase;

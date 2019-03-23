@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-import firebase from '../app';
+import firebase from '@firebase/app';
 
-import '../auth';
-import '../database';
-import '../storage';
+import '@firebase/auth';
+import '@firebase/database';
+import '@firebase/storage';
 
 export default firebase;
