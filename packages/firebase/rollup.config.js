@@ -171,7 +171,7 @@ const completeBuilds = [
       { file: pkg.browser, format: 'cjs', sourcemap: true },
       { file: pkg.module, format: 'es', sourcemap: true }
     ],
-    plugins,
+    plugins: [...plugins, typescript()],
     external
   },
   {
@@ -182,7 +182,7 @@ const completeBuilds = [
       sourcemap: true,
       name: GLOBAL_NAME
     },
-    plugins: [...plugins, uglify()]
+    plugins: [...plugins, typescript(), uglify()]
   },
   /**
    * App Node.js Builds
@@ -190,7 +190,7 @@ const completeBuilds = [
   {
     input: 'src/index.node.ts',
     output: { file: pkg.main, format: 'cjs', sourcemap: true },
-    plugins,
+    plugins: [...plugins, typescript()],
     external
   },
   /**
@@ -199,7 +199,7 @@ const completeBuilds = [
   {
     input: 'src/index.rn.ts',
     output: { file: pkg['react-native'], format: 'cjs', sourcemap: true },
-    plugins,
+    plugins: [...plugins, typescript()],
     external
   }
 ];
