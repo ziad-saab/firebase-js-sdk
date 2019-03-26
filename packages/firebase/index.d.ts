@@ -9,4 +9,3 @@ import './storage';
 
 export = firebase;
 export as namespace firebase;
-

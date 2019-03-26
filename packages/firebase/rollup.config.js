@@ -41,11 +41,7 @@ const pkgsByName = {
   storage: storagePkg
 };
 
-const plugins = [
-  sourcemaps(),
-  resolveModule(),
-  commonjs()
-];
+const plugins = [sourcemaps(), resolveModule(), commonjs()];
 
 const tsInstance = typescript();
 
@@ -69,10 +65,12 @@ const appBuilds = [
       { file: resolve('app', appPkg.main), format: 'cjs', sourcemap: true },
       { file: resolve('app', appPkg.module), format: 'es', sourcemap: true }
     ],
-    plugins: [...plugins,
-    typescript({
-      tsconfig: './app/tsconfig.json'
-    })],
+    plugins: [
+      ...plugins,
+      typescript({
+        tsconfig: './app/tsconfig.json'
+      })
+    ],
     external
   },
   /**
@@ -116,9 +114,12 @@ const componentBuilds = components
             sourcemap: true
           }
         ],
-        plugins: [...plugins, typescript({
-          tsconfig: `./${component}/tsconfig.json`
-        })],
+        plugins: [
+          ...plugins,
+          typescript({
+            tsconfig: `./${component}/tsconfig.json`
+          })
+        ],
         external
       },
       {
