@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-import { FirebaseNamespace } from '@firebase/app-types';
 import { createFirebaseNamespace } from './src/firebaseApp';
+import * as types from '@firebase/app-types';
 
 // Node detection logic from: https://github.com/iliakan/detect-node/
 let isNode = false;
 try {
   isNode =
     Object.prototype.toString.call(global.process) === '[object process]';
-} catch (e) {}
+} catch (e) { }
 
 isNode &&
   console.warn(`
@@ -40,6 +40,9 @@ to false and "main" to true:
 https://github.com/rollup/rollup-plugin-node-resolve
 `);
 
+
+export { types };
 export const firebase = createFirebaseNamespace();
+
 
 export default firebase;
