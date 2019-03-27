@@ -23,7 +23,7 @@ let isNode = false;
 try {
   isNode =
     Object.prototype.toString.call(global.process) === '[object process]';
-} catch (e) { }
+} catch (e) {}
 
 isNode &&
   console.warn(`
@@ -40,9 +40,7 @@ to false and "main" to true:
 https://github.com/rollup/rollup-plugin-node-resolve
 `);
 
-
 export { types };
 export const firebase = createFirebaseNamespace();
-
 
 export default firebase;
