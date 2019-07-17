@@ -99,7 +99,6 @@ export function createFirebaseNamespaceCore(
     delete apps[name];
   }
 
-  
   //test
 
   /**
