@@ -137,6 +137,10 @@ export function createFirebaseNamespaceCore(
       config.name = DEFAULT_ENTRY_NAME;
     }
 
+    // prettier
+
+    
+
     const { name } = config;
 
     if (typeof name !== 'string' || !name) {
