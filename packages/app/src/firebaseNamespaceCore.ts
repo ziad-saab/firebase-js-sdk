@@ -99,6 +99,9 @@ export function createFirebaseNamespaceCore(
     delete apps[name];
   }
 
+  
+  //test
+
   /**
    * Get the App object for a given name (or DEFAULT).
    */
