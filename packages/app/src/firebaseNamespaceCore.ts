@@ -95,7 +95,7 @@ export function createFirebaseNamespaceCore(
   function removeApp(name: string): void {
     const app = apps[name];
     callAppHooks(app, 'delete');
-    // test
+    
     delete apps[name];
   }
 
