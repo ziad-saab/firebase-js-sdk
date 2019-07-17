@@ -141,9 +141,6 @@ export function createFirebaseNamespaceCore(
 
     if (typeof name !== 'string' || !name) {
       throw ERROR_FACTORY.create(AppError.BAD_APP_NAME, {
-
-
-        
         appName: String(name)
       });
     }
