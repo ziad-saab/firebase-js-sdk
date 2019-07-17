@@ -139,8 +139,6 @@ export function createFirebaseNamespaceCore(
 
     // prettier
 
-    
-
     const { name } = config;
 
     if (typeof name !== 'string' || !name) {
