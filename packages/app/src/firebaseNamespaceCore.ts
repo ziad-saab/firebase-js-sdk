@@ -137,12 +137,13 @@ export function createFirebaseNamespaceCore(
       config.name = DEFAULT_ENTRY_NAME;
     }
 
-    // prettier
-
     const { name } = config;
 
     if (typeof name !== 'string' || !name) {
       throw ERROR_FACTORY.create(AppError.BAD_APP_NAME, {
+
+
+        
         appName: String(name)
       });
     }
