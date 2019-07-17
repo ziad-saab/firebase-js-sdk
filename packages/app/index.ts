@@ -65,7 +65,7 @@ firebaseNamespace.initializeApp = function(...args: any) {
       https://github.com/rollup/rollup-plugin-node-resolve
       `);
   }
-   return initializeApp.apply(undefined, args);
+  return initializeApp.apply(undefined, args);
 };
 
 export const firebase = firebaseNamespace;
