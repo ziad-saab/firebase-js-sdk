@@ -92,6 +92,9 @@ class FirebaseAppImpl implements FirebaseApp {
     };
   }
 
+  //comment
+  
+
   get automaticDataCollectionEnabled(): boolean {
     this.checkDestroyed_();
     return this._automaticDataCollectionEnabled;
