@@ -93,7 +93,6 @@ class FirebaseAppImpl implements FirebaseApp {
   }
 
   //comment
-  
 
   get automaticDataCollectionEnabled(): boolean {
     this.checkDestroyed_();
@@ -134,10 +133,12 @@ class FirebaseAppImpl implements FirebaseApp {
           })
         );
       })
-      .then((): void => {
-        this.isDeleted_ = true;
-        this.services_ = {};
-      });
+      .then(
+        (): void => {
+          this.isDeleted_ = true;
+          this.services_ = {};
+        }
+      );
   }
 
   /**
