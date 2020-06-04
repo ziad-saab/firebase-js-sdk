@@ -21,6 +21,7 @@ import { addEqualityMatcher } from '../../util/equality_matcher';
 import firebase from '../util/firebase_export';
 import { apiDescribe, withTestDb, withTestDoc } from '../util/helpers';
 
+import { it } from './crash_helper';
 const Blob = firebase.firestore!.Blob;
 const GeoPoint = firebase.firestore!.GeoPoint;
 const Timestamp = firebase.firestore!.Timestamp;

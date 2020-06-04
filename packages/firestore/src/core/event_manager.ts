@@ -115,7 +115,14 @@ export class EventManager implements SyncEngineListener {
 
     if (lastListen) {
       this.queries.delete(query);
-      return this.syncEngine.unlisten(query);
+      while (true) {
+        try {
+          await this.syncEngine.unlisten(query);
+          return;
+        } catch (e) {
+          console.log('retry unlisten');
+        }
+      }
     }
   }
 

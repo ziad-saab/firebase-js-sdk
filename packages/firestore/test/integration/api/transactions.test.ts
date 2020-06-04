@@ -20,6 +20,7 @@ import { expect } from 'chai';
 import firebase from '../util/firebase_export';
 import * as integrationHelpers from '../util/helpers';
 
+import { it } from './crash_helper';
 const FieldPath = firebase.firestore!.FieldPath;
 
 const apiDescribe = integrationHelpers.apiDescribe;

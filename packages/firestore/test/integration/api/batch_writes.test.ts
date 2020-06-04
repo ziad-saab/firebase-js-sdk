@@ -22,6 +22,7 @@ import { EventsAccumulator } from '../util/events_accumulator';
 import firebase from '../util/firebase_export';
 import * as integrationHelpers from '../util/helpers';
 
+import { it } from './crash_helper';
 // tslint:disable:no-floating-promises
 
 const apiDescribe = integrationHelpers.apiDescribe;
@@ -151,7 +152,8 @@ apiDescribe('Database batch writes', (persistence: boolean) => {
         const accumulator = new EventsAccumulator<firestore.QuerySnapshot>();
         const unsubscribe = collection.onSnapshot(
           { includeMetadataChanges: true },
-          accumulator.storeEvent
+          accumulator.storeEvent,
+          accumulator.storeError
         );
         return accumulator
           .awaitEvent()
@@ -198,7 +200,8 @@ apiDescribe('Database batch writes', (persistence: boolean) => {
         const accumulator = new EventsAccumulator<firestore.QuerySnapshot>();
         const unsubscribe = collection.onSnapshot(
           { includeMetadataChanges: true },
-          accumulator.storeEvent
+          accumulator.storeEvent,
+          accumulator.storeError
         );
         let batchCommitPromise: Promise<void>;
         return accumulator
@@ -264,7 +267,8 @@ apiDescribe('Database batch writes', (persistence: boolean) => {
         const accumulator = new EventsAccumulator<firestore.QuerySnapshot>();
         const unsubscribe = collection.onSnapshot(
           { includeMetadataChanges: true },
-          accumulator.storeEvent
+          accumulator.storeEvent,
+          accumulator.storeError
         );
         return accumulator
           .awaitEvent()
@@ -316,7 +320,8 @@ apiDescribe('Database batch writes', (persistence: boolean) => {
       const accumulator = new EventsAccumulator<firestore.DocumentSnapshot>();
       const unsubscribe = doc.onSnapshot(
         { includeMetadataChanges: true },
-        accumulator.storeEvent
+        accumulator.storeEvent,
+        accumulator.storeError
       );
       return accumulator
         .awaitEvent()

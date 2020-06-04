@@ -22,6 +22,7 @@ import { EventsAccumulator } from '../util/events_accumulator';
 import firebase from '../util/firebase_export';
 import { apiDescribe, withTestDoc } from '../util/helpers';
 
+import { it } from './crash_helper';
 // tslint:disable:no-floating-promises
 
 // tslint:disable-next-line:variable-name Type alias can be capitalized.

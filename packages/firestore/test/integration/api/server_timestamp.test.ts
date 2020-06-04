@@ -22,6 +22,7 @@ import { EventsAccumulator } from '../util/events_accumulator';
 import firebase from '../util/firebase_export';
 import { apiDescribe, withTestDoc } from '../util/helpers';
 
+import { it } from './crash_helper';
 // Allow custom types for testing.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyTestData = any;

@@ -70,6 +70,7 @@ import { PersistencePromise } from './persistence_promise';
 import { ClientId } from './shared_client_state';
 import { TargetData } from './target_data';
 import {
+  IndexedDbTransactionError,
   isIndexedDbTransactionError,
   SimpleDb,
   SimpleDbStore,
@@ -305,9 +306,7 @@ export class IndexedDbPersistence implements Persistence {
         this.simpleDb = db;
         // NOTE: This is expected to fail sometimes (in the case of another tab already
         // having the persistence lock), so it's the first thing we should do.
-        return this.updateClientMetadataAndTryBecomePrimary(
-          this.forceOwningTab
-        );
+        return this.updateClientMetadataAndTryBecomePrimary();
       })
       .then(() => {
         if (!this.isPrimary && !this.allowTabSynchronization) {
@@ -404,9 +403,7 @@ export class IndexedDbPersistence implements Persistence {
    * primary state listener if the client either newly obtained or released its
    * primary lease.
    */
-  private updateClientMetadataAndTryBecomePrimary(
-    forceOwningTab = false
-  ): Promise<void> {
+  private updateClientMetadataAndTryBecomePrimary(): Promise<void> {
     return this.runTransaction(
       'updateClientMetadataAndTryBecomePrimary',
       'readwrite',
@@ -455,6 +452,13 @@ export class IndexedDbPersistence implements Persistence {
           } else {
             throw e;
           }
+        }
+
+        if (isIndexedDbTransactionError(e)) {
+          logDebug(LOG_TAG, 'Failed to extend owner lease: ', e);
+          // Proceed with the existing state. Any subsequent access to
+          // IndexedDB will verify the lease.
+          return this.isPrimary;
         }
 
         logDebug(
@@ -802,6 +806,13 @@ export class IndexedDbPersistence implements Persistence {
     const simpleDbMode = mode === 'readonly' ? 'readonly' : 'readwrite';
 
     let persistenceTransaction: PersistenceTransaction;
+
+    if (Math.random() < 0.2) {
+      console.log('Injecting failure for ' + action);
+      return Promise.reject(
+        new IndexedDbTransactionError(new Error('SIMULATED ERROR ' + action))
+      );
+    }
 
     // Do all transactions as readwrite against all object stores, since we
     // are the only reader/writer.

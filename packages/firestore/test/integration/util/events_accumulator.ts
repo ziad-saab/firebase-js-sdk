@@ -26,7 +26,7 @@ import { expect } from 'chai';
 export class EventsAccumulator<
   T extends firestore.DocumentSnapshot | firestore.QuerySnapshot
 > {
-  private events: T[] = [];
+  private events: (T | Error)[] = [];
   private waitingFor: number = 0;
   private deferred: Deferred<T[]> | null = null;
   private rejectAdditionalEvents = false;
@@ -42,13 +42,24 @@ export class EventsAccumulator<
     this.checkFulfilled();
   };
 
+  storeError: (e: Error) => void = (e: Error) => {
+    this.events.push(e);
+    this.checkFulfilled();
+  };
+
   awaitEvents(length: number): Promise<T[]> {
     expect(this.deferred).to.equal(null, 'Already waiting for events.');
     this.waitingFor = length;
     this.deferred = new Deferred<T[]>();
     const promise = this.deferred.promise;
     this.checkFulfilled();
-    return promise;
+    return promise.then(e => {
+      if (e.find(el => el instanceof Error) !== undefined) {
+        return Promise.reject(e.find(el => el instanceof Error)!);
+      } else {
+        return e;
+      }
+    });
   }
 
   awaitEvent(): Promise<T> {

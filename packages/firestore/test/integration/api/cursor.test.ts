@@ -28,6 +28,7 @@ import {
 } from '../util/helpers';
 import { Timestamp as TimestampInstance } from '@firebase/firestore-types';
 
+import { it } from './crash_helper';
 const Timestamp = firebase.firestore!.Timestamp;
 const FieldPath = firebase.firestore!.FieldPath;
 

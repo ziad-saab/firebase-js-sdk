@@ -20,6 +20,7 @@ import { expect } from 'chai';
 import { EventsAccumulator } from '../util/events_accumulator';
 import * as integrationHelpers from '../util/helpers';
 
+import { it } from './crash_helper';
 const apiDescribe = integrationHelpers.apiDescribe;
 
 apiDescribe('Smoke Test', (persistence: boolean) => {

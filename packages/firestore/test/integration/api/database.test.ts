@@ -33,6 +33,7 @@ import {
   withTestDocAndInitialData
 } from '../util/helpers';
 
+import { it } from './crash_helper';
 // tslint:disable:no-floating-promises
 
 use(chaiAsPromised);

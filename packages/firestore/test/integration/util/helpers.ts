@@ -220,7 +220,14 @@ export async function withTestDbsSettings(
 
     let ready: Promise<firestore.FirebaseFirestore>;
     if (persistence) {
-      ready = firestore.enablePersistence().then(() => firestore);
+      ready = firestore
+        .enablePersistence()
+        .then(() => firestore)
+        .catch(() => {
+          console.log('proceeding without persistence');
+          return firestore;
+        });
+      persistence = false;
     } else {
       ready = Promise.resolve(firestore);
     }

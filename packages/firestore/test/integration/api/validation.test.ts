@@ -29,6 +29,7 @@ import {
   withTestDb
 } from '../util/helpers';
 
+import { it } from './crash_helper';
 // tslint:disable:no-floating-promises
 
 const FieldPath = firebase.firestore!.FieldPath;

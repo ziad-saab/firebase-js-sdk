@@ -27,6 +27,7 @@ import {
   withTestDocAndSettings
 } from '../util/helpers';
 
+import { it } from './crash_helper';
 const FieldPath = firebase.firestore!.FieldPath;
 const FieldValue = firebase.firestore!.FieldValue;
 const Timestamp = firebase.firestore!.Timestamp;

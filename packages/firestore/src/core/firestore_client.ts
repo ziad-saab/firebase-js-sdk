@@ -48,6 +48,7 @@ import {
   ComponentProvider,
   MemoryComponentProvider
 } from './component_provider';
+import { isIndexedDbTransactionError } from '../local/simple_db';
 
 const LOG_TAG = 'FirestoreClient';
 const MAX_CONCURRENT_LIMBO_RESOLUTIONS = 100;
@@ -363,7 +364,13 @@ export class FirestoreClient {
 
       await this.remoteStore.shutdown();
       await this.sharedClientState.shutdown();
-      await this.persistence.shutdown();
+
+      while (true) {
+        try {
+          await this.persistence.shutdown();
+          break;
+        } catch (e) {}
+      }
 
       // `removeChangeListener` must be called after shutting down the
       // RemoteStore as it will prevent the RemoteStore from retrieving
