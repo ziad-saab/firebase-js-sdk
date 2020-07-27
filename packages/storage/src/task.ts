@@ -46,12 +46,10 @@ import {
   validate
 } from './implementation/args';
 import { async as fbsAsync } from './implementation/async';
-import { Location } from './implementation/location';
 import * as fbsMetadata from './implementation/metadata';
 import * as fbsRequests from './implementation/requests';
 import * as typeUtils from './implementation/type';
 import { Reference } from './reference';
-import { StorageService } from './service';
 
 /**
  * Represents a blob being uploaded. Can be used to pause/resume/cancel the
@@ -59,8 +57,6 @@ import { StorageService } from './service';
  */
 export class UploadTask {
   private ref_: Reference;
-  private service_: StorageService;
-  private location_: Location;
   private blob_: FbsBlob;
   private metadata_: Metadata | null;
   private mappings_: fbsMetadata.Mappings;
@@ -85,20 +81,11 @@ export class UploadTask {
    *     from, untyped to avoid cyclic dependencies.
    * @param blob The blob to upload.
    */
-  constructor(
-    ref: Reference,
-    service: StorageService,
-    location: Location,
-    mappings: fbsMetadata.Mappings,
-    blob: FbsBlob,
-    metadata: Metadata | null = null
-  ) {
+  constructor(ref: Reference, blob: FbsBlob, metadata: Metadata | null = null) {
     this.ref_ = ref;
-    this.service_ = service;
-    this.location_ = location;
     this.blob_ = blob;
     this.metadata_ = metadata;
-    this.mappings_ = mappings;
+    this.mappings_ = ref.mappings();
     this.resumable_ = this.shouldDoResumable_(this.blob_);
     this.state_ = InternalTaskState.RUNNING;
     this.errorHandler_ = error => {
@@ -171,7 +158,7 @@ export class UploadTask {
 
   private resolveToken_(callback: (p1: string | null) => void): void {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    this.service_.getAuthToken().then(authToken => {
+    this.ref_.service.getAuthToken().then(authToken => {
       switch (this.state_) {
         case InternalTaskState.RUNNING:
           callback(authToken);
@@ -192,13 +179,16 @@ export class UploadTask {
   private createResumable_(): void {
     this.resolveToken_(authToken => {
       const requestInfo = fbsRequests.createResumableUpload(
-        this.service_,
-        this.location_,
+        this.ref_.service,
+        this.ref_.location,
         this.mappings_,
         this.blob_,
         this.metadata_
       );
-      const createRequest = this.service_.makeRequest(requestInfo, authToken);
+      const createRequest = this.ref_.service.makeRequest(
+        requestInfo,
+        authToken
+      );
       this.request_ = createRequest;
       createRequest.getPromise().then((url: string) => {
         this.request_ = null;
@@ -214,12 +204,15 @@ export class UploadTask {
     const url = this.uploadUrl_ as string;
     this.resolveToken_(authToken => {
       const requestInfo = fbsRequests.getResumableUploadStatus(
-        this.service_,
-        this.location_,
+        this.ref_.service,
+        this.ref_.location,
         url,
         this.blob_
       );
-      const statusRequest = this.service_.makeRequest(requestInfo, authToken);
+      const statusRequest = this.ref_.service.makeRequest(
+        requestInfo,
+        authToken
+      );
       this.request_ = statusRequest;
       statusRequest.getPromise().then(status => {
         status = status as fbsRequests.ResumableUploadStatus;
@@ -248,8 +241,8 @@ export class UploadTask {
       let requestInfo;
       try {
         requestInfo = fbsRequests.continueResumableUpload(
-          this.location_,
-          this.service_,
+          this.ref_.location,
+          this.ref_.service,
           url,
           this.blob_,
           chunkSize,
@@ -262,7 +255,10 @@ export class UploadTask {
         this.transition_(InternalTaskState.ERROR);
         return;
       }
-      const uploadRequest = this.service_.makeRequest(requestInfo, authToken);
+      const uploadRequest = this.ref_.service.makeRequest(
+        requestInfo,
+        authToken
+      );
       this.request_ = uploadRequest;
       uploadRequest
         .getPromise()
@@ -293,11 +289,14 @@ export class UploadTask {
   private fetchMetadata_(): void {
     this.resolveToken_(authToken => {
       const requestInfo = fbsRequests.getMetadata(
-        this.service_,
-        this.location_,
+        this.ref_.service,
+        this.ref_.location,
         this.mappings_
       );
-      const metadataRequest = this.service_.makeRequest(requestInfo, authToken);
+      const metadataRequest = this.ref_.service.makeRequest(
+        requestInfo,
+        authToken
+      );
       this.request_ = metadataRequest;
       metadataRequest.getPromise().then(metadata => {
         this.request_ = null;
@@ -310,13 +309,13 @@ export class UploadTask {
   private oneShotUpload_(): void {
     this.resolveToken_(authToken => {
       const requestInfo = fbsRequests.multipartUpload(
-        this.service_,
-        this.location_,
+        this.ref_.service,
+        this.ref_.location,
         this.mappings_,
         this.blob_,
         this.metadata_
       );
-      const multipartRequest = this.service_.makeRequest(
+      const multipartRequest = this.ref_.service.makeRequest(
         requestInfo,
         authToken
       );

@@ -22,28 +22,153 @@ import { FailRequest } from './implementation/failrequest';
 import { Request, makeRequest } from './implementation/request';
 import { RequestInfo } from './implementation/requestinfo';
 import { XhrIoPool } from './implementation/xhriopool';
-import { Reference } from './reference';
+import { Reference, getParent, getChild } from './reference';
 import { Provider } from '@firebase/component';
 import { FirebaseAuthInternalName } from '@firebase/auth-interop-types';
 import { FirebaseOptions } from '@firebase/app-types-exp';
 import * as constants from '../src/implementation/constants';
 import * as errorsExports from './implementation/error';
 
+function isUrl(path?: string): boolean {
+  return /^[A-Za-z]+:\/\//.test(path as string);
+}
+
+export function urlValidator(maybeUrl: unknown): void {
+  if (typeof maybeUrl !== 'string') {
+    throw 'Path is not a string.';
+  }
+  if (!isUrl) {
+    throw 'Expected full URL but got a child path, use ref instead.';
+  }
+  try {
+    Location.makeFromUrl(maybeUrl as string);
+  } catch (e) {
+    throw 'Expected valid full URL but got an invalid one.';
+  }
+}
+
+export function pathValidator(path: unknown): void {
+  if (typeof path !== 'string') {
+    throw 'Path is not a string.';
+  }
+  if (isUrl(path)) {
+    throw 'Expected child path but got a URL, use refFromURL instead.';
+  }
+}
+
+export function serviceOrRefValidator(serviceOrRef: unknown): void {
+  if (
+    !(
+      serviceOrRef instanceof StorageService ||
+      serviceOrRef instanceof Reference
+    )
+  ) {
+    throw 'Expected Storage instance or Reference.';
+  }
+}
+
+export function serviceValidator(service: unknown): void {
+  if (!(service instanceof StorageService)) {
+    throw 'Expected Storage instance.';
+  }
+}
+
 /**
- * A service that provides firebaseStorage.Reference instances.
+ * Returns a firebaseStorage.Reference for the given url.
+ */
+function refFromURL(service: StorageService, url: string): Reference {
+  args.validate(
+    'refFromURL',
+    [new args.ArgSpec(serviceValidator), args.stringSpec(urlValidator, false)],
+    arguments
+  );
+  return new Reference(service, url);
+}
+
+/**
+ * Returns a firebaseStorage.Reference for the given path in the default
+ * bucket.
+ */
+function refFromPath(
+  ref: StorageService | Reference,
+  path?: string
+): Reference | null {
+  args.validate(
+    'refFromPath',
+    [
+      new args.ArgSpec(serviceOrRefValidator),
+      args.stringSpec(pathValidator, false)
+    ],
+    arguments
+  );
+  if (ref instanceof StorageService) {
+    const service = ref;
+    if (service.bucket_ == null) {
+      throw new Error('No Storage Bucket defined in Firebase Options.');
+    }
+    const reference = new Reference(service, service.bucket_!);
+    if (path != null) {
+      return refFromPath(service, path);
+    } else {
+      return reference;
+    }
+  } else {
+    // ref is a Reference
+    if (path === '..') {
+      return getParent(ref);
+    } else if (typeof path === 'string') {
+      return getChild(ref, path);
+    } else {
+      return ref;
+    }
+  }
+}
+/**
+ * Returns a firebaseStorage.Reference for the given path in the default
+ * bucket.
+ */
+/**
+ * Returns a storage Reference for the given url, or given path in the
+ * default bucket.
+ * @param serviceOrRef `Storage` instance or storage `Reference`.
+ * @param pathOrUrl Storage path, or URL. If empty, returns root reference (if Storage
+ * instance provided) or returns same reference (if Reference provided).
+ */
+export function ref(
+  serviceOrRef: StorageService | Reference,
+  pathOrUrl?: string
+): Reference | null {
+  args.validate(
+    'refFromURL',
+    [
+      new args.ArgSpec(serviceOrRefValidator),
+      args.stringSpec(urlValidator, false)
+    ],
+    arguments
+  );
+  if (serviceOrRef instanceof StorageService && isUrl(pathOrUrl)) {
+    return refFromURL(serviceOrRef, pathOrUrl!);
+  } else if (pathOrUrl != null) {
+    return refFromPath(serviceOrRef, pathOrUrl);
+  } else {
+    return null;
+  }
+}
+
+/**
+ * A service that provides Firebase Storage Reference instances.
  * @param opt_url gs:// url to a custom Storage Bucket
  *
  * @struct
  */
 export class StorageService {
-  private app_: FirebaseApp | null;
-  private readonly bucket_: Location | null = null;
-  private readonly internals_: ServiceInternals;
+  app_: FirebaseApp | null;
+  readonly bucket_: Location | null = null;
   private readonly authProvider_: Provider<FirebaseAuthInternalName>;
   private readonly appId_: string | null = null;
   private readonly pool_: XhrIoPool;
   private readonly requests_: Set<Request<unknown>>;
-  private deleted_: boolean = false;
+  deleted_: boolean = false;
   private maxOperationRetryTime_: number;
   private maxUploadRetryTime_: number;
 
@@ -64,7 +189,6 @@ export class StorageService {
     } else {
       this.bucket_ = StorageService.extractBucket_(this.app_?.options);
     }
-    this.internals_ = new ServiceInternals(this);
   }
 
   private static extractBucket_(config?: FirebaseOptions): Location | null {
@@ -129,54 +253,6 @@ export class StorageService {
     }
   }
 
-  /**
-   * Returns a firebaseStorage.Reference for the given path in the default
-   * bucket.
-   */
-  ref(path?: string): Reference {
-    function validator(path: unknown): void {
-      if (typeof path !== 'string') {
-        throw 'Path is not a string.';
-      }
-      if (/^[A-Za-z]+:\/\//.test(path as string)) {
-        throw 'Expected child path but got a URL, use refFromURL instead.';
-      }
-    }
-    args.validate('ref', [args.stringSpec(validator, true)], arguments);
-    if (this.bucket_ == null) {
-      throw new Error('No Storage Bucket defined in Firebase Options.');
-    }
-
-    const ref = new Reference(this, this.bucket_);
-    if (path != null) {
-      return ref.child(path);
-    } else {
-      return ref;
-    }
-  }
-
-  /**
-   * Returns a firebaseStorage.Reference object for the given absolute URL,
-   * which must be a gs:// or http[s]:// URL.
-   */
-  refFromURL(url: string): Reference {
-    function validator(p: unknown): void {
-      if (typeof p !== 'string') {
-        throw 'Path is not a string.';
-      }
-      if (!/^[A-Za-z]+:\/\//.test(p as string)) {
-        throw 'Expected full URL but got a child path, use ref instead.';
-      }
-      try {
-        Location.makeFromUrl(p as string);
-      } catch (e) {
-        throw 'Expected valid full URL but got an invalid one.';
-      }
-    }
-    args.validate('refFromURL', [args.stringSpec(validator, false)], arguments);
-    return new Reference(this, url);
-  }
-
   get maxUploadRetryTime(): number {
     return this.maxUploadRetryTime_;
   }
@@ -205,28 +281,5 @@ export class StorageService {
 
   get app(): FirebaseApp | null {
     return this.app_;
-  }
-
-  get INTERNAL(): ServiceInternals {
-    return this.internals_;
-  }
-}
-
-/**
- * @struct
- */
-export class ServiceInternals {
-  service_: StorageService;
-
-  constructor(service: StorageService) {
-    this.service_ = service;
-  }
-
-  /**
-   * Called when the associated app is deleted.
-   */
-  delete(): Promise<void> {
-    this.service_.deleteApp();
-    return Promise.resolve();
   }
 }
