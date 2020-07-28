@@ -35,7 +35,7 @@ const es5BuildPlugins = [
 
 const es5Builds = [
   {
-    input: 'index.ts',
+    input: './compat/index.ts',
     output: [
       { file: pkg.main, format: 'cjs', sourcemap: true },
       { file: pkg.module, format: 'es', sourcemap: true }
@@ -62,7 +62,7 @@ const es2017BuildPlugins = [
 
 const es2017Builds = [
   {
-    input: 'index.ts',
+    input: './compat/index.ts',
     output: {
       file: pkg.esm2017,
       format: 'es',
@@ -73,4 +73,5 @@ const es2017Builds = [
   }
 ];
 
+// eslint-disable-next-line import/no-default-export
 export default [...es5Builds, ...es2017Builds];

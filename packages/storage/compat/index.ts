@@ -17,12 +17,12 @@
 
 import firebase from '@firebase/app';
 import { _FirebaseNamespace } from '@firebase/app-types/private';
-import { StringFormat } from './src/implementation/string';
-import { TaskEvent, TaskState } from './src/implementation/taskenums';
+import { StringFormat } from '../src/implementation/string';
+import { TaskEvent, TaskState } from '../src/implementation/taskenums';
 
-import { XhrIoPool } from './src/implementation/xhriopool';
-import { Reference } from './src/reference';
-import { StorageService } from './src/service';
+import { XhrIoPool } from '../src/implementation/xhriopool';
+import { ReferenceCompat as Reference } from './reference';
+import { StorageServiceCompat as StorageService } from './service';
 import * as types from '@firebase/storage-types';
 import {
   Component,
@@ -30,7 +30,7 @@ import {
   ComponentContainer
 } from '@firebase/component';
 
-import { name, version } from './package.json';
+import { name, version } from '../package.json';
 
 /**
  * Type constant for Firebase Storage.
