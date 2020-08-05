@@ -55,26 +55,26 @@ import { Reference } from './reference';
  * Represents a blob being uploaded. Can be used to pause/resume/cancel the
  * upload and manage callbacks for various events.
  */
-export class UploadTask {
+export class UploadTask<T extends UploadTaskSnapshot> {
   private ref_: Reference;
-  private blob_: FbsBlob;
-  private metadata_: Metadata | null;
+  blob_: FbsBlob;
+  metadata_: Metadata | null;
   private mappings_: fbsMetadata.Mappings;
-  private transferred_: number = 0;
+  transferred_: number = 0;
   private needToFetchStatus_: boolean = false;
   private needToFetchMetadata_: boolean = false;
-  private observers_: Array<Observer<UploadTaskSnapshot>> = [];
+  private observers_: Array<StorageObserver<T>> = [];
   private resumable_: boolean;
-  private state_: InternalTaskState;
+  state_: InternalTaskState;
   private error_: Error | null = null;
   private uploadUrl_: string | null = null;
   private request_: Request<unknown> | null = null;
   private chunkMultiplier_: number = 1;
   private errorHandler_: (p1: FirebaseStorageError) => void;
   private metadataErrorHandler_: (p1: FirebaseStorageError) => void;
-  private resolve_: ((p1: UploadTaskSnapshot) => void) | null = null;
+  private resolve_: ((p1: T) => void) | null = null;
   private reject_: ((p1: Error) => void) | null = null;
-  private promise_: Promise<UploadTaskSnapshot>;
+  private promise_: Promise<T>;
 
   /**
    * @param ref The firebaseStorage.Reference object this task came
@@ -425,7 +425,7 @@ export class UploadTask {
     }
   }
 
-  get snapshot(): UploadTaskSnapshot {
+  get snapshot(): T {
     const externalState = taskStateFromInternalTaskState(this.state_);
     return new UploadTaskSnapshot(
       this.transferred_,
@@ -434,7 +434,7 @@ export class UploadTask {
       this.metadata_,
       this,
       this.ref_
-    );
+    ) as T;
   }
 
   /**
@@ -443,13 +443,10 @@ export class UploadTask {
    */
   on(
     type: TaskEvent,
-    nextOrObserver?:
-      | NextFn<UploadTaskSnapshot>
-      | StorageObserver<UploadTaskSnapshot>
-      | null,
+    nextOrObserver?: Partial<StorageObserver<T>> | null | ((a: T) => unknown),
     error?: ErrorFn | null,
     completed?: CompleteFn | null
-  ): Unsubscribe | Subscribe<UploadTaskSnapshot> {
+  ): Unsubscribe | Subscribe<T> {
     function typeValidator(): void {
       if (type !== TaskEvent.STATE_CHANGED) {
         throw `Expected one of the event types: [${TaskEvent.STATE_CHANGED}].`;
@@ -490,14 +487,9 @@ export class UploadTask {
     validate('on', specs, arguments);
     const self = this;
 
-    function makeBinder(
-      specs: ArgSpec[] | null
-    ): Subscribe<UploadTaskSnapshot> {
+    function makeBinder(specs: ArgSpec[] | null): Subscribe<T> {
       function binder(
-        nextOrObserver?:
-          | NextFn<UploadTaskSnapshot>
-          | StorageObserver<UploadTaskSnapshot>
-          | null,
+        nextOrObserver?: NextFn<T> | StorageObserver<T> | null,
         error?: ErrorFn | null,
         complete?: CompleteFn | null
       ): () => void {
@@ -544,7 +536,7 @@ export class UploadTask {
    */
   then<U>(
     onFulfilled?: ((value: UploadTaskSnapshot) => U | Promise<U>) | null,
-    onRejected?: ((error: Error) => U | Promise<U>) | null
+    onRejected?: ((error: FirebaseStorageError) => U | Promise<U>) | null
   ): Promise<U> {
     // These casts are needed so that TypeScript can infer the types of the
     // resulting Promise.
@@ -557,14 +549,16 @@ export class UploadTask {
   /**
    * Equivalent to calling `then(null, onRejected)`.
    */
-  catch<T>(onRejected: (p1: Error) => T | Promise<T>): Promise<T> {
+  catch<T>(
+    onRejected: (p1: FirebaseStorageError) => T | Promise<T>
+  ): Promise<T> {
     return this.then(null, onRejected);
   }
 
   /**
    * Adds the given observer.
    */
-  private addObserver_(observer: Observer<UploadTaskSnapshot>): void {
+  private addObserver_(observer: Observer<T>): void {
     this.observers_.push(observer);
     this.notifyObserver_(observer);
   }
@@ -572,7 +566,7 @@ export class UploadTask {
   /**
    * Removes the given observer.
    */
-  private removeObserver_(observer: Observer<UploadTaskSnapshot>): void {
+  private removeObserver_(observer: Observer<T>): void {
     const i = this.observers_.indexOf(observer);
     if (i !== -1) {
       this.observers_.splice(i, 1);
@@ -610,7 +604,7 @@ export class UploadTask {
     }
   }
 
-  private notifyObserver_(observer: Observer<UploadTaskSnapshot>): void {
+  private notifyObserver_(observer: Observer<T>): void {
     const externalState = taskStateFromInternalTaskState(this.state_);
     switch (externalState) {
       case TaskState.RUNNING:

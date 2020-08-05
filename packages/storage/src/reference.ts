@@ -36,9 +36,9 @@ import {
 import * as type from './implementation/type';
 import { Metadata } from './metadata';
 import { StorageService } from './service';
-import { UploadTask } from './task';
 import { ListOptions, ListResult } from './list';
 import { uploadDataSpec, listOptionSpec } from './implementation/args';
+import { UploadTask } from './task';
 
 /**
  * Provides methods to interact with a bucket in the Firebase Storage service.

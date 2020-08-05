@@ -16,7 +16,6 @@
  */
 
 import { FirebaseApp, FirebaseNamespace } from '@firebase/app-types';
-import { Observer, Unsubscribe } from '@firebase/util';
 
 export interface FullMetadata extends UploadMetadata {
   bucket: string;
@@ -85,15 +84,25 @@ export interface UploadMetadata extends SettableMetadata {
   md5Hash?: string | null;
 }
 
+export type NextFn<T> = (value: T) => void;
+export type ErrorFn = (error: Error | FirebaseStorageError) => void;
+export type CompleteFn = () => void;
+export type Unsubscribe = () => void;
+export interface StorageObserver<T> {
+  next?: NextFn<T> | null;
+  error?: ErrorFn | null;
+  complete?: CompleteFn | null;
+}
+
 export interface UploadTask {
   cancel(): boolean;
   catch(onRejected: (a: Error) => any): Promise<any>;
   on(
     event: TaskEvent,
     nextOrObserver?:
-      | Partial<Observer<UploadTaskSnapshot>>
+      | Partial<StorageObserver<UploadTaskSnapshot>>
       | null
-      | ((a: UploadTaskSnapshot) => any),
+      | ((a: UploadTaskSnapshot) => unknown),
     error?: ((a: Error) => any) | null,
     complete?: Unsubscribe | null
   ): Function;

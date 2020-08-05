@@ -28,6 +28,7 @@ import {
   updateMetadata,
   deleteObject
 } from '../src/reference';
+import * as types from '@firebase/storage-types';
 import {
   validate,
   stringSpec,
@@ -36,12 +37,12 @@ import {
   uploadDataSpec
 } from '../src/implementation/args';
 import { Metadata } from '../src/metadata';
-import { UploadTask } from '../src/task';
 import { StringFormat, formatValidator } from '../src/implementation/string';
 import { ListResult, ListOptions } from '../src/list';
+import { UploadTaskCompat } from './task';
 
-export class ReferenceCompat extends Reference {
-  static fromReference(ref: Reference): ReferenceCompat {
+export class ReferenceCompat extends Reference implements types.Reference {
+  static fromReference(ref: Reference): types.Reference {
     return new ReferenceCompat(ref.service, ref.location);
   }
   toString(): string {
@@ -53,7 +54,7 @@ export class ReferenceCompat extends Reference {
    *     appending childPath, removing any duplicate, beginning, or trailing
    *     slashes.
    */
-  child(childPath: string): ReferenceCompat {
+  child(childPath: string): types.Reference {
     validate('child', [stringSpec()], arguments);
     const reference = getChild(this, childPath);
     return ReferenceCompat.fromReference(reference);
@@ -63,7 +64,7 @@ export class ReferenceCompat extends Reference {
    * @return A reference to the parent of the
    *     current object, or null if the current object is the root.
    */
-  get parent(): ReferenceCompat | null {
+  get parent(): types.Reference | null {
     validate('parent', [], arguments);
     const reference = getParent(this);
     if (reference == null) {
@@ -80,11 +81,11 @@ export class ReferenceCompat extends Reference {
    */
   put(
     data: Blob | Uint8Array | ArrayBuffer,
-    metadata: Metadata | null = null
-  ): UploadTask {
+    metadata?: Metadata
+  ): UploadTaskCompat {
     validate('put', [uploadDataSpec(), metadataSpec(true)], arguments);
     this.throwIfRoot_('put');
-    return uploadBytes(this, data, metadata);
+    return uploadBytes(this, data, metadata) as UploadTaskCompat;
   }
   /**
    * Uploads a string to this object's location.
@@ -97,7 +98,7 @@ export class ReferenceCompat extends Reference {
     value: string,
     format: StringFormat = StringFormat.RAW,
     metadata?: Metadata
-  ): UploadTask {
+  ): UploadTaskCompat {
     validate(
       'putString',
       [stringSpec(), stringSpec(formatValidator, true), metadataSpec(true)],
