@@ -43,24 +43,22 @@ import { UploadTaskCompat } from './task';
 import {ListResultCompat} from "./list";
 import {Location} from "../src/implementation/location";
 import {StorageServiceCompat} from "./service";
+import * as errorsExports from "../src/implementation/error";
 
-export class ReferenceCompat extends Reference implements types.Reference {
-  static fromReference(ref: Reference): types.Reference {
-    return new ReferenceCompat(ref.service, ref.location);
+export class ReferenceCompat implements types.Reference {
+  
+  constructor(private readonly delegate: Reference) {
   }
   
-  get root() :  any {
-    const location = new Location(this.location.bucket, '');
-    return new ReferenceCompat(this.service, location);
-  }
+  root = new ReferenceCompat(this.delegate.root);
+  storage = new StorageServiceCompat(this.delegate.storage);
+  name = this.delegate.name;
+  bucket = this.delegate.bucket;
+  fullPath = this.delegate.fullPath;
 
-  get storage(): any {
-    return StorageServiceCompat.fromService(this.service);
-  }
-  
   toString(): string {
     validate('toString', [], arguments);
-    return super.toString();
+    return this.delegate.toString();
   }
   
   /**
@@ -70,8 +68,8 @@ export class ReferenceCompat extends Reference implements types.Reference {
    */
   child(childPath: string): types.Reference {
     validate('child', [stringSpec()], arguments);
-    const reference = getChild(this, childPath);
-    return ReferenceCompat.fromReference(reference);
+    const reference = getChild(this.delegate, childPath);
+    return new ReferenceCompat(reference);
   }
 
   /**
@@ -80,11 +78,11 @@ export class ReferenceCompat extends Reference implements types.Reference {
    */
   get parent(): types.Reference | null {
     validate('parent', [], arguments);
-    const reference = getParent(this);
+    const reference = getParent(this.delegate);
     if (reference == null) {
       return null;
     }
-    return ReferenceCompat.fromReference(reference);
+    return new ReferenceCompat(reference);
   }
 
   /**
@@ -96,10 +94,10 @@ export class ReferenceCompat extends Reference implements types.Reference {
   put(
     data: Blob | Uint8Array | ArrayBuffer,
     metadata?: Metadata
-  ): any {
+  ): types.UploadTask {
     validate('put', [uploadDataSpec(), metadataSpec(true)], arguments);
     this.throwIfRoot_('put');
-    return uploadBytes(this, data, metadata) as UploadTaskCompat;
+    return new UploadTaskCompat(uploadBytes(this.delegate, data, metadata));
   }
   /**
    * Uploads a string to this object's location.
@@ -112,15 +110,16 @@ export class ReferenceCompat extends Reference implements types.Reference {
     value: string,
     format: StringFormat = StringFormat.RAW,
     metadata?: Metadata
-  ): any {
+  ): types.UploadTask {
     validate(
       'putString',
       [stringSpec(), stringSpec(formatValidator, true), metadataSpec(true)],
       arguments
     );
     this.throwIfRoot_('putString');
-    return uploadString(this, value, format, metadata);
+    return new UploadTaskCompat(uploadString(this.delegate, value, format, metadata));
   }
+  
   /**
    * List all items (files) and prefixes (folders) under this storage reference.
    *
@@ -140,8 +139,9 @@ export class ReferenceCompat extends Reference implements types.Reference {
    */
   listAll(): Promise<types.ListResult> {
     validate('listAll', [], arguments);
-    return listAll(this).then(r => new ListResultCompat(r));
+    return listAll(this.delegate).then(r => new ListResultCompat(r));
   }
+  
   /**
    * List items (files) and prefixes (folders) under this storage reference.
    *
@@ -164,7 +164,7 @@ export class ReferenceCompat extends Reference implements types.Reference {
    */
   list(options?: ListOptions | null): Promise<types.ListResult> {
     validate('list', [listOptionSpec(true)], arguments);
-    return list(this, options).then(r => new ListResultCompat(r));
+    return list(this.delegate, options).then(r => new ListResultCompat(r));
   }
 
   /**
@@ -174,7 +174,7 @@ export class ReferenceCompat extends Reference implements types.Reference {
    */
   getMetadata(): Promise<Metadata> {
     validate('getMetadata', [], arguments);
-    return getMetadata(this);
+    return getMetadata(this.delegate);
   }
 
   /**
@@ -188,7 +188,7 @@ export class ReferenceCompat extends Reference implements types.Reference {
    */
   updateMetadata(metadata: Metadata): Promise<Metadata> {
     validate('updateMetadata', [metadataSpec()], arguments);
-    return updateMetadata(this, metadata);
+    return updateMetadata(this.delegate, metadata);
   }
 
   /**
@@ -197,7 +197,7 @@ export class ReferenceCompat extends Reference implements types.Reference {
    */
   getDownloadURL(): Promise<string> {
     validate('getDownloadURL', [], arguments);
-    return getDownloadURL(this);
+    return getDownloadURL(this.delegate);
   }
 
   /**
@@ -207,6 +207,12 @@ export class ReferenceCompat extends Reference implements types.Reference {
   delete(): Promise<void> {
     validate('delete', [], arguments);
     this.throwIfRoot_('delete');
-    return deleteObject(this);
+    return deleteObject(this.delegate);
+  }
+
+  private throwIfRoot_(name: string): void {
+    if (this.delegate.location.path === '') {
+      throw errorsExports.invalidRootOperation(name);
+    }
   }
 }

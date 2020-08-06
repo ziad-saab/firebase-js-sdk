@@ -28,29 +28,32 @@ import { Metadata } from '../src/metadata';
 import { ErrorFn, CompleteFn, Unsubscribe, Subscribe } from '@firebase/util';
 import * as types from '@firebase/storage-types';
 import { StorageObserver } from '../src/implementation/observer';
+import * as typeUtils from "../src/implementation/type";
 
-export class UploadTaskCompat extends UploadTask<UploadTaskSnapshotCompat>
-  implements types.UploadTask {
+export class UploadTaskCompat implements types.UploadTask {
   constructor(
-    private refCompat_: ReferenceCompat,
-    blob: FbsBlob,
-    metadata: Metadata | null = null
+    private readonly delegate : UploadTask
   ) {
-    super(refCompat_, blob, metadata);
   }
   
-  get snapshot(): UploadTaskSnapshotCompat {
-    const externalState = taskStateFromInternalTaskState(this.state_);
-    return new UploadTaskSnapshotCompat(
-      this.transferred_,
-      this.blob_.size(),
-      externalState,
-      this.metadata_!, // VERIFY
-      this,
-      this.refCompat_
-    );
+  snapshot = new UploadTaskSnapshotCompat(this.delegate.snapshot);
+
+  cancel = this.delegate.cancel;
+  catch = this.delegate.catch;
+  pause = this.delegate.pause;
+  resume = this.delegate.pause;
+
+  then(
+    onFulfilled?: ((a: UploadTaskSnapshotCompat) => any) | null,
+    onRejected?: ((a: Error) => any) | null
+  ): Promise<any> {
+    return this.delegate.then((snapshot) => {
+      if (onFulfilled) {
+        return onFulfilled(new UploadTaskSnapshotCompat(snapshot));
+      }
+    }, onRejected)
   }
-  
+
   on(
     type: TaskEvent,
     nextOrObserver?:
@@ -60,12 +63,7 @@ export class UploadTaskCompat extends UploadTask<UploadTaskSnapshotCompat>
     error?: ErrorFn | null,
     completed?: CompleteFn | null
   ): Unsubscribe | Subscribe<UploadTaskSnapshotCompat> {
-    const castNextOrObserver = nextOrObserver as
-      | Partial<StorageObserver<UploadTaskSnapshot>>
-      | null
-      | ((a: UploadTaskSnapshot) => unknown);
-    return super.on(type, castNextOrObserver, error, completed) as
-      | Unsubscribe
-      | Subscribe<types.UploadTaskSnapshot>;
+    // TODO: Wrap all returned values in new snapshot
+    return this.delegate.on(type, nextOrObserver as any, error, completed);
   }
 }

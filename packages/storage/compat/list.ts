@@ -25,8 +25,8 @@ export class ListResultCompat implements types.ListResult {
   constructor(private readonly  delegate: ListResult) {
   }
   
-  prefixes = this.delegate.prefixes.map(v => ReferenceCompat.fromReference(v));
-  items = this.delegate.items.map(v => ReferenceCompat.fromReference(v));
+  prefixes = this.delegate.prefixes.map(v => new ReferenceCompat(v));
+  items = this.delegate.items.map(v => new ReferenceCompat(v));
   nextPageToken = this.delegate.nextPageToken;
   
 }

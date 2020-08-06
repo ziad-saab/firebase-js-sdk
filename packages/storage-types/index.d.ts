@@ -47,7 +47,7 @@ export interface Reference {
     metadata?: UploadMetadata
   ): UploadTask;
   root: Reference;
-  storage: Storage;
+  storage: FirebaseStorage;
   toString(): string;
   updateMetadata(metadata: SettableMetadata): Promise<FullMetadata>;
   listAll(): Promise<ListResult>;
@@ -85,7 +85,7 @@ export interface UploadMetadata extends SettableMetadata {
 }
 
 export type NextFn<T> = (value: T) => void;
-export type ErrorFn = (error: Error | FirebaseStorageError) => void;
+export type ErrorFn = (error: Error | Error) => void;
 export type CompleteFn = () => void;
 export type Unsubscribe = () => void;
 export interface StorageObserver<T> {

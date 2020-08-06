@@ -21,14 +21,16 @@ import { TaskState } from '../src/implementation/taskenums';
 import { Metadata } from '../src/metadata';
 import { ReferenceCompat } from './reference';
 import { UploadTaskCompat } from './task';
+import {UploadTaskSnapshot} from "../src/tasksnapshot";
 
 export class UploadTaskSnapshotCompat implements types.UploadTaskSnapshot{
-  constructor(
-    readonly bytesTransferred: number,
-    readonly totalBytes: number,
-    readonly state: TaskState,
-    readonly metadata: Metadata,
-    readonly task: UploadTaskCompat,
-    readonly ref: ReferenceCompat
-  ) {}
+  
+  constructor(readonly delegate: UploadTaskSnapshot) {}
+
+  bytesTransferred = this.delegate.bytesTransferred;
+  metadata = this.delegate.metadata;
+  ref = new ReferenceCompat(this.delegate.ref);
+  state = this.delegate.state;
+  task = new UploadTaskCompat(this.delegate.task);
+  totalBytes = this.delegate.bytesTransferred;
 }

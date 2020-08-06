@@ -16,12 +16,8 @@
  */
 
 import * as types from '@firebase/storage-types';
-import { StorageService, isUrl } from '../src/service';
+import { StorageService, isUrl, ref } from '../src/service';
 import { Location } from '../src/implementation/location';
-import { FirebaseApp } from '@firebase/app-types';
-import { Provider } from '@firebase/component';
-import { FirebaseAuthInternalName } from '@firebase/auth-interop-types';
-import { XhrIoPool } from '../src/implementation/xhriopool';
 import * as args from '../src/implementation/args';
 import { ReferenceCompat } from './reference';
 
@@ -54,37 +50,22 @@ export function pathValidator(path: unknown): void {
  *
  * @struct
  */
-export class StorageServiceCompat extends StorageService implements types.FirebaseStorage {
-  private readonly internals_: ServiceInternals;
+export class StorageServiceCompat implements types.FirebaseStorage {
 
-  constructor(
-    app: FirebaseApp,
-    authProvider: Provider<FirebaseAuthInternalName>,
-  pool: XhrIoPool,
-    url?: string
-  ) {
-    super(app, authProvider, pool, url);
-    this.internals_ = new ServiceInternals(this);
+  constructor(readonly delegate: StorageService) {
   }
 
-
-  static fromService(service: StorageService) : StorageServiceCompat  {
-    return new StorageServiceCompat(service.app, service.authProvider_, service.pool_, service.url_);
-  }
+  app = this.delegate.app;
+  maxOperationRetryTime = this.delegate.maxOperationRetryTime;
+  maxUploadRetryTime = this.delegate.maxUploadRetryTime
   
   /**
    * Returns a firebaseStorage.Reference for the given path in the default
    * bucket.
    */
-  ref(path?: string): types.Reference  {
+  ref(path?: string): types.Reference {
     args.validate('ref', [args.stringSpec(pathValidator, true)], arguments);
-
-    const reference = new ReferenceCompat(this, this.bucket_!);
-    if (path != null) {
-      return reference.child(path);
-    } else {
-      return reference;
-    }
+    return new ReferenceCompat(ref(this.delegate, path));
   }
 
   /**
@@ -97,7 +78,7 @@ export class StorageServiceCompat extends StorageService implements types.Fireba
       [args.stringSpec(urlValidator, false)],
       arguments
     );
-    return new ReferenceCompat(this, url);
+    return new ReferenceCompat(ref(this.delegate, url)) as  types.Reference;
   }
 
   setMaxUploadRetryTime(time: number): void {
@@ -106,8 +87,7 @@ export class StorageServiceCompat extends StorageService implements types.Fireba
       [args.nonNegativeNumberSpec()],
       arguments
     );
-    // Can't call get/set on super class.
-    this.maxUploadRetryTime_ = time;
+    this.delegate.maxUploadRetryTime = time;
   }
 
   setMaxOperationRetryTime(time: number): void {
@@ -116,14 +96,8 @@ export class StorageServiceCompat extends StorageService implements types.Fireba
       [args.nonNegativeNumberSpec()],
       arguments
     );
-    // Can't call get/set on super class.
-    this.maxOperationRetryTime_ = time;
+    this.delegate.maxOperationRetryTime = time;
   }
-
-  get INTERNAL(): ServiceInternals {
-    return this.internals_;
-  }
-
 }
 
 /**
