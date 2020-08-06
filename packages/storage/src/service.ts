@@ -140,14 +140,8 @@ export class StorageService {
   /**
    * @internal
    */
-  app_: FirebaseApp | null;
-  /**
-   * @internal
-   */
   readonly bucket_: Location | null = null;
-  private readonly authProvider_: Provider<FirebaseAuthInternalName>;
-  private readonly appId_: string | null = null;
-  private readonly pool_: XhrIoPool;
+  protected readonly appId_: string | null = null;
   private readonly requests_: Set<Request<unknown>>;
   /**
    * @internal
@@ -157,21 +151,18 @@ export class StorageService {
   protected maxUploadRetryTime_: number;
 
   constructor(
-    app: FirebaseApp | null,
-    authProvider: Provider<FirebaseAuthInternalName>,
-    pool: XhrIoPool,
-    url?: string
+    readonly app: FirebaseApp,
+    readonly authProvider_: Provider<FirebaseAuthInternalName>,
+    readonly pool_: XhrIoPool,
+    readonly url_?: string
   ) {
-    this.app_ = app;
-    this.authProvider_ = authProvider;
     this.maxOperationRetryTime_ = constants.DEFAULT_MAX_OPERATION_RETRY_TIME;
     this.maxUploadRetryTime_ = constants.DEFAULT_MAX_UPLOAD_RETRY_TIME;
     this.requests_ = new Set();
-    this.pool_ = pool;
-    if (url != null) {
-      this.bucket_ = Location.makeFromBucketSpec(url);
+    if (url_ != null) {
+      this.bucket_ = Location.makeFromBucketSpec(url_);
     } else {
-      this.bucket_ = StorageService.extractBucket_(this.app_?.options);
+      this.bucket_ = StorageService.extractBucket_(this.app.options);
     }
   }
 
@@ -200,7 +191,6 @@ export class StorageService {
    */
   deleteApp(): void {
     this.deleted_ = true;
-    this.app_ = null;
     this.requests_.forEach(request => request.cancel());
     this.requests_.clear();
   }
@@ -258,9 +248,5 @@ export class StorageService {
 
   set maxOperationRetryTime(time: number) {
     this.maxOperationRetryTime_ = time;
-  }
-
-  get app(): FirebaseApp | null {
-    return this.app_;
   }
 }

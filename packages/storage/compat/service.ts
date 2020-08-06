@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+import * as types from '@firebase/storage-types';
 import { StorageService, isUrl } from '../src/service';
 import { Location } from '../src/implementation/location';
 import { FirebaseApp } from '@firebase/app-types';
@@ -53,24 +54,29 @@ export function pathValidator(path: unknown): void {
  *
  * @struct
  */
-export class StorageServiceCompat extends StorageService {
+export class StorageServiceCompat extends StorageService implements types.FirebaseStorage {
   private readonly internals_: ServiceInternals;
 
   constructor(
-    app: FirebaseApp | null,
+    app: FirebaseApp,
     authProvider: Provider<FirebaseAuthInternalName>,
-    pool: XhrIoPool,
+  pool: XhrIoPool,
     url?: string
   ) {
     super(app, authProvider, pool, url);
     this.internals_ = new ServiceInternals(this);
   }
 
+
+  static fromService(service: StorageService) : StorageServiceCompat  {
+    return new StorageServiceCompat(service.app, service.authProvider_, service.pool_, service.url_);
+  }
+  
   /**
    * Returns a firebaseStorage.Reference for the given path in the default
    * bucket.
    */
-  ref(path?: string): ReferenceCompat {
+  ref(path?: string): types.Reference  {
     args.validate('ref', [args.stringSpec(pathValidator, true)], arguments);
 
     const reference = new ReferenceCompat(this, this.bucket_!);
@@ -85,7 +91,7 @@ export class StorageServiceCompat extends StorageService {
    * Returns a firebaseStorage.Reference object for the given absolute URL,
    * which must be a gs:// or http[s]:// URL.
    */
-  refFromURL(url: string): ReferenceCompat {
+  refFromURL(url: string): types.Reference {
     args.validate(
       'refFromURL',
       [args.stringSpec(urlValidator, false)],
@@ -114,13 +120,10 @@ export class StorageServiceCompat extends StorageService {
     this.maxOperationRetryTime_ = time;
   }
 
-  get app(): FirebaseApp | null {
-    return this.app_;
-  }
-
   get INTERNAL(): ServiceInternals {
     return this.internals_;
   }
+
 }
 
 /**

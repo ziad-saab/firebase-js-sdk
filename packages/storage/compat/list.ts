@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2017 Google LLC
+ * Copyright 2019 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,16 @@
 
 
 import * as types from '@firebase/storage-types';
-import { TaskState } from '../src/implementation/taskenums';
-import { Metadata } from '../src/metadata';
-import { ReferenceCompat } from './reference';
-import { UploadTaskCompat } from './task';
+import {ListResult} from "../src/list";
+import {ReferenceCompat} from "./reference";
 
-export class UploadTaskSnapshotCompat implements types.UploadTaskSnapshot{
-  constructor(
-    readonly bytesTransferred: number,
-    readonly totalBytes: number,
-    readonly state: TaskState,
-    readonly metadata: Metadata,
-    readonly task: UploadTaskCompat,
-    readonly ref: ReferenceCompat
-  ) {}
+
+export class ListResultCompat implements types.ListResult {
+  constructor(private readonly  delegate: ListResult) {
+  }
+  
+  prefixes = this.delegate.prefixes.map(v => ReferenceCompat.fromReference(v));
+  items = this.delegate.items.map(v => ReferenceCompat.fromReference(v));
+  nextPageToken = this.delegate.nextPageToken;
+  
 }

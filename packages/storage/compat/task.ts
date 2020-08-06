@@ -38,17 +38,19 @@ export class UploadTaskCompat extends UploadTask<UploadTaskSnapshotCompat>
   ) {
     super(refCompat_, blob, metadata);
   }
+  
   get snapshot(): UploadTaskSnapshotCompat {
     const externalState = taskStateFromInternalTaskState(this.state_);
     return new UploadTaskSnapshotCompat(
       this.transferred_,
       this.blob_.size(),
       externalState,
-      this.metadata_,
+      this.metadata_!, // VERIFY
       this,
       this.refCompat_
     );
   }
+  
   on(
     type: TaskEvent,
     nextOrObserver?:

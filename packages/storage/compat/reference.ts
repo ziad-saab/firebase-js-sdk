@@ -38,17 +38,31 @@ import {
 } from '../src/implementation/args';
 import { Metadata } from '../src/metadata';
 import { StringFormat, formatValidator } from '../src/implementation/string';
-import { ListResult, ListOptions } from '../src/list';
+import {  ListOptions } from '../src/list';
 import { UploadTaskCompat } from './task';
+import {ListResultCompat} from "./list";
+import {Location} from "../src/implementation/location";
+import {StorageServiceCompat} from "./service";
 
 export class ReferenceCompat extends Reference implements types.Reference {
   static fromReference(ref: Reference): types.Reference {
     return new ReferenceCompat(ref.service, ref.location);
   }
+  
+  get root() :  any {
+    const location = new Location(this.location.bucket, '');
+    return new ReferenceCompat(this.service, location);
+  }
+
+  get storage(): any {
+    return StorageServiceCompat.fromService(this.service);
+  }
+  
   toString(): string {
     validate('toString', [], arguments);
     return super.toString();
   }
+  
   /**
    * @return A reference to the object obtained by
    *     appending childPath, removing any duplicate, beginning, or trailing
@@ -82,7 +96,7 @@ export class ReferenceCompat extends Reference implements types.Reference {
   put(
     data: Blob | Uint8Array | ArrayBuffer,
     metadata?: Metadata
-  ): UploadTaskCompat {
+  ): any {
     validate('put', [uploadDataSpec(), metadataSpec(true)], arguments);
     this.throwIfRoot_('put');
     return uploadBytes(this, data, metadata) as UploadTaskCompat;
@@ -98,7 +112,7 @@ export class ReferenceCompat extends Reference implements types.Reference {
     value: string,
     format: StringFormat = StringFormat.RAW,
     metadata?: Metadata
-  ): UploadTaskCompat {
+  ): any {
     validate(
       'putString',
       [stringSpec(), stringSpec(formatValidator, true), metadataSpec(true)],
@@ -124,9 +138,9 @@ export class ReferenceCompat extends Reference implements types.Reference {
    *      sub-directories and `items` contains references to objects in this
    *      folder. `nextPageToken` is never returned.
    */
-  listAll(): Promise<ListResult> {
+  listAll(): Promise<types.ListResult> {
     validate('listAll', [], arguments);
-    return listAll(this);
+    return listAll(this).then(r => new ListResultCompat(r));
   }
   /**
    * List items (files) and prefixes (folders) under this storage reference.
@@ -148,9 +162,9 @@ export class ReferenceCompat extends Reference implements types.Reference {
    *      contains references to objects in this folder. `nextPageToken`
    *      can be used to get the rest of the results.
    */
-  list(options?: ListOptions | null): Promise<ListResult> {
+  list(options?: ListOptions | null): Promise<types.ListResult> {
     validate('list', [listOptionSpec(true)], arguments);
-    return list(this, options);
+    return list(this, options).then(r => new ListResultCompat(r));
   }
 
   /**
