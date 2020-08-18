@@ -77,7 +77,7 @@ export function registerRemoteConfig(
     }
     // Guards against the SDK being used when indexedDB is not available.
     if (!isIndexedDBAvailable()) {
-      throw ERROR_FACTORY.create(ErrorCode.INDEXED_DB_UNSUPPORTED);
+      throw ERROR_FACTORY.create(ErrorCode.INDEXED_DB_UNAVAILABLE);
     }
     // Normalizes optional inputs.
     const { projectId, apiKey, appId } = app.options;
@@ -159,8 +159,7 @@ async function isSupported(): Promise<boolean> {
   }
 
   try {
-    const isDBOpenable: boolean = await validateIndexedDBOpenable();
-    return isDBOpenable;
+    return await validateIndexedDBOpenable();
   } catch (error) {
     return false;
   }
