@@ -4,10 +4,10 @@
   "version": "0.2.1",
   "scripts": {
     "test": "tsc",
-    "test:ci": "node ../../scripts/run_tests_in_ci.js"
+    "test:ci": "node ../../scripts/run_tests_in_ci.js -s test"
   },
   "devDependencies": {
-    "firebase": "7.17.2",
+    "firebase": "7.18.0",
     "typescript": "3.9.7"
   }
 }
