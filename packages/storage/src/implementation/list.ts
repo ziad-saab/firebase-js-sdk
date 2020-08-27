@@ -57,7 +57,7 @@ function fromBackendResponse(
   const listResult: ListResult = {
     prefixes: [],
     items: [],
-    nextPageToken: resource['nextPageToken']
+    nextPageToken: resource['nextPageToken'] || null
   };
   if (resource[PREFIXES_KEY]) {
     for (const path of resource[PREFIXES_KEY]) {

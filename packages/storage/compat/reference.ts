@@ -38,20 +38,20 @@ import {
 } from '../src/implementation/args';
 import { Metadata } from '../src/metadata';
 import { StringFormat, formatValidator } from '../src/implementation/string';
-import {  ListOptions } from '../src/list';
+import { ListOptions } from '../src/list';
 import { UploadTaskCompat } from './task';
-import {ListResultCompat} from "./list";
-import {Location} from "../src/implementation/location";
-import {StorageServiceCompat} from "./service";
-import * as errorsExports from "../src/implementation/error";
+import { ListResultCompat } from './list';
+import { StorageServiceCompat } from './service';
+import * as errorsExports from '../src/implementation/error';
 
 export class ReferenceCompat implements types.Reference {
-  
-  constructor(private readonly delegate: Reference) {
-  }
-  
-  root = new ReferenceCompat(this.delegate.root);
-  storage = new StorageServiceCompat(this.delegate.storage);
+  constructor(private readonly delegate: Reference) {}
+
+  root = new ReferenceCompat(this.delegate.root) as types.Reference;
+  storage = new StorageServiceCompat(
+    this.delegate.storage,
+    ref => new ReferenceCompat(ref)
+  ) as types.FirebaseStorage;
   name = this.delegate.name;
   bucket = this.delegate.bucket;
   fullPath = this.delegate.fullPath;
@@ -60,7 +60,7 @@ export class ReferenceCompat implements types.Reference {
     validate('toString', [], arguments);
     return this.delegate.toString();
   }
-  
+
   /**
    * @return A reference to the object obtained by
    *     appending childPath, removing any duplicate, beginning, or trailing
@@ -97,7 +97,10 @@ export class ReferenceCompat implements types.Reference {
   ): types.UploadTask {
     validate('put', [uploadDataSpec(), metadataSpec(true)], arguments);
     this.throwIfRoot_('put');
-    return new UploadTaskCompat(uploadBytes(this.delegate, data, metadata));
+    return new UploadTaskCompat(
+      uploadBytes(this.delegate, data, metadata),
+      this
+    );
   }
   /**
    * Uploads a string to this object's location.
@@ -117,9 +120,12 @@ export class ReferenceCompat implements types.Reference {
       arguments
     );
     this.throwIfRoot_('putString');
-    return new UploadTaskCompat(uploadString(this.delegate, value, format, metadata));
+    return new UploadTaskCompat(
+      uploadString(this.delegate, value, format, metadata),
+      this
+    );
   }
-  
+
   /**
    * List all items (files) and prefixes (folders) under this storage reference.
    *
@@ -139,9 +145,11 @@ export class ReferenceCompat implements types.Reference {
    */
   listAll(): Promise<types.ListResult> {
     validate('listAll', [], arguments);
-    return listAll(this.delegate).then(r => new ListResultCompat(r));
+    return listAll(this.delegate).then(
+      r => new ListResultCompat(r, ref => new ReferenceCompat(ref))
+    );
   }
-  
+
   /**
    * List items (files) and prefixes (folders) under this storage reference.
    *
@@ -164,7 +172,9 @@ export class ReferenceCompat implements types.Reference {
    */
   list(options?: ListOptions | null): Promise<types.ListResult> {
     validate('list', [listOptionSpec(true)], arguments);
-    return list(this.delegate, options).then(r => new ListResultCompat(r));
+    return list(this.delegate, options).then(
+      r => new ListResultCompat(r, ref => new ReferenceCompat(ref))
+    );
   }
 
   /**

@@ -20,6 +20,7 @@ import { StorageService, isUrl, ref } from '../src/service';
 import { Location } from '../src/implementation/location';
 import * as args from '../src/implementation/args';
 import { ReferenceCompat } from './reference';
+import { Reference } from '../src/reference';
 
 export function urlValidator(maybeUrl: unknown): void {
   if (typeof maybeUrl !== 'string') {
@@ -51,21 +52,22 @@ export function pathValidator(path: unknown): void {
  * @struct
  */
 export class StorageServiceCompat implements types.FirebaseStorage {
-
-  constructor(readonly delegate: StorageService) {
-  }
+  constructor(
+    readonly delegate: StorageService,
+    private converter: (ref: Reference) => ReferenceCompat
+  ) {}
 
   app = this.delegate.app;
   maxOperationRetryTime = this.delegate.maxOperationRetryTime;
-  maxUploadRetryTime = this.delegate.maxUploadRetryTime
-  
+  maxUploadRetryTime = this.delegate.maxUploadRetryTime;
+
   /**
    * Returns a firebaseStorage.Reference for the given path in the default
    * bucket.
    */
   ref(path?: string): types.Reference {
     args.validate('ref', [args.stringSpec(pathValidator, true)], arguments);
-    return new ReferenceCompat(ref(this.delegate, path));
+    return this.converter(ref(this.delegate, path));
   }
 
   /**
@@ -78,7 +80,7 @@ export class StorageServiceCompat implements types.FirebaseStorage {
       [args.stringSpec(urlValidator, false)],
       arguments
     );
-    return new ReferenceCompat(ref(this.delegate, url)) as  types.Reference;
+    return this.converter(ref(this.delegate, url)) as types.Reference;
   }
 
   setMaxUploadRetryTime(time: number): void {

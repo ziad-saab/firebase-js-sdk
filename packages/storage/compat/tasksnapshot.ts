@@ -15,22 +15,21 @@
  * limitations under the License.
  */
 
-
 import * as types from '@firebase/storage-types';
-import { TaskState } from '../src/implementation/taskenums';
-import { Metadata } from '../src/metadata';
 import { ReferenceCompat } from './reference';
 import { UploadTaskCompat } from './task';
-import {UploadTaskSnapshot} from "../src/tasksnapshot";
+import { UploadTaskSnapshot } from '../src/tasksnapshot';
 
-export class UploadTaskSnapshotCompat implements types.UploadTaskSnapshot{
-  
-  constructor(readonly delegate: UploadTaskSnapshot) {}
+export class UploadTaskSnapshotCompat implements types.UploadTaskSnapshot {
+  constructor(
+    readonly delegate: UploadTaskSnapshot,
+    public task: UploadTaskCompat,
+    public ref: ReferenceCompat
+  ) {}
 
   bytesTransferred = this.delegate.bytesTransferred;
   metadata = this.delegate.metadata;
-  ref = new ReferenceCompat(this.delegate.ref);
   state = this.delegate.state;
-  task = new UploadTaskCompat(this.delegate.task);
+  // task = new UploadTaskCompat(this.delegate.task);
   totalBytes = this.delegate.bytesTransferred;
 }

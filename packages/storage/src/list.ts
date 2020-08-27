@@ -15,18 +15,16 @@
  * limitations under the License.
  */
 
-
 import * as types from '@firebase/storage-types';
 import { Reference } from './reference';
 
 /**
  * @fileoverview Documentation for ListOptions and ListResult format.
  */
-export interface ListOptions extends types.ListOptions {
-}
+export interface ListOptions extends types.ListOptions {}
 
-export interface ListResult  {
-  prefixes: Reference[]; 
+export interface ListResult {
+  prefixes: Reference[];
   items: Reference[];
   nextPageToken: string | null;
 }

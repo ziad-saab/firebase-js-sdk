@@ -31,6 +31,7 @@ import {
   emptyAuthProvider
 } from './testshared';
 import { StringHeaders, TestingXhrIo } from './xhrio';
+import { FirebaseApp } from '@firebase/app-types';
 
 const testLocation = new Location('bucket', 'object');
 const smallBlob = new FbsBlob(new Blob(['a']));
@@ -64,7 +65,11 @@ function storageServiceWithHandler(handler: RequestHandler): StorageService {
     xhrio.simulateResponse(response.status, response.body, response.headers);
   }
 
-  return new StorageService(null, emptyAuthProvider, makePool(newSend));
+  return new StorageService(
+    {} as FirebaseApp,
+    emptyAuthProvider,
+    makePool(newSend)
+  );
 }
 
 function fakeServerHandler(): RequestHandler {

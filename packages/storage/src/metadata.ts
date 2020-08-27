@@ -22,6 +22,18 @@ import { Reference } from './reference';
  * @fileoverview Documentation for the metadata format.
  */
 interface Metadata extends types.FullMetadata {
+  type: string | undefined;
+  md5Hash: string | undefined;
+  cacheControl: string | undefined;
+  contentDisposition: string | undefined;
+  contentEncoding: string | undefined;
+  contentLanguage: string | undefined;
+  contentType: string | undefined;
+  downloadTokens: string[] | undefined;
+  customMetadata: { [key: string]: string } | undefined;
+  ref: Reference | undefined;
+
+  [prop: string]: unknown;
 }
 
 export { Metadata };

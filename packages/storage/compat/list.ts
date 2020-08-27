@@ -15,18 +15,18 @@
  * limitations under the License.
  */
 
-
 import * as types from '@firebase/storage-types';
-import {ListResult} from "../src/list";
-import {ReferenceCompat} from "./reference";
-
+import { ListResult } from '../src/list';
+import { ReferenceCompat } from './reference';
+import { Reference } from '../src/reference';
 
 export class ListResultCompat implements types.ListResult {
-  constructor(private readonly  delegate: ListResult) {
-  }
-  
-  prefixes = this.delegate.prefixes.map(v => new ReferenceCompat(v));
-  items = this.delegate.items.map(v => new ReferenceCompat(v));
+  constructor(
+    private readonly delegate: ListResult,
+    private converter: (ref: Reference) => ReferenceCompat
+  ) {}
+
+  prefixes = this.delegate.prefixes.map(v => this.converter(v));
+  items = this.delegate.items.map(v => this.converter(v));
   nextPageToken = this.delegate.nextPageToken;
-  
 }

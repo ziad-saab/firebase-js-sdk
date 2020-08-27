@@ -38,7 +38,7 @@ function makeFakeService(
 
 function makeStorage(url: string): Reference {
   const service = new StorageService(
-    null,
+    {} as FirebaseApp,
     testShared.emptyAuthProvider,
     testShared.makePool(null)
   );

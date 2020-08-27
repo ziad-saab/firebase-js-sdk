@@ -17,41 +17,41 @@
 
 import { UploadTask } from '../src/task';
 import { UploadTaskSnapshotCompat } from './tasksnapshot';
-import { UploadTaskSnapshot } from '../src/tasksnapshot';
-import {
-  taskStateFromInternalTaskState,
-  TaskEvent
-} from '../src/implementation/taskenums';
-import { ReferenceCompat } from './reference';
-import { FbsBlob } from '../src/implementation/blob';
-import { Metadata } from '../src/metadata';
+import { TaskEvent } from '../src/implementation/taskenums';
 import { ErrorFn, CompleteFn, Unsubscribe, Subscribe } from '@firebase/util';
 import * as types from '@firebase/storage-types';
 import { StorageObserver } from '../src/implementation/observer';
-import * as typeUtils from "../src/implementation/type";
+import { UploadTaskSnapshot } from '../src/tasksnapshot';
+import { ReferenceCompat } from './reference';
 
 export class UploadTaskCompat implements types.UploadTask {
   constructor(
-    private readonly delegate : UploadTask
-  ) {
-  }
-  
-  snapshot = new UploadTaskSnapshotCompat(this.delegate.snapshot);
+    private readonly delegate: UploadTask,
+    private readonly ref: ReferenceCompat
+  ) {}
+
+  snapshot = new UploadTaskSnapshotCompat(
+    this.delegate.snapshot,
+    this,
+    this.ref
+  );
 
   cancel = this.delegate.cancel;
   catch = this.delegate.catch;
   pause = this.delegate.pause;
-  resume = this.delegate.pause;
+  resume = this.delegate.resume;
 
   then(
-    onFulfilled?: ((a: UploadTaskSnapshotCompat) => any) | null,
-    onRejected?: ((a: Error) => any) | null
-  ): Promise<any> {
-    return this.delegate.then((snapshot) => {
+    onFulfilled?: ((a: UploadTaskSnapshotCompat) => unknown) | null,
+    onRejected?: ((a: Error) => unknown) | null
+  ): Promise<unknown> {
+    return this.delegate.then(snapshot => {
       if (onFulfilled) {
-        return onFulfilled(new UploadTaskSnapshotCompat(snapshot));
+        return onFulfilled(
+          new UploadTaskSnapshotCompat(snapshot, this, this.ref)
+        );
       }
-    }, onRejected)
+    }, onRejected);
   }
 
   on(
@@ -64,6 +64,11 @@ export class UploadTaskCompat implements types.UploadTask {
     completed?: CompleteFn | null
   ): Unsubscribe | Subscribe<UploadTaskSnapshotCompat> {
     // TODO: Wrap all returned values in new snapshot
-    return this.delegate.on(type, nextOrObserver as any, error, completed);
+    return this.delegate.on(
+      type,
+      nextOrObserver as Partial<StorageObserver<UploadTaskSnapshot>>,
+      error,
+      completed
+    );
   }
 }

@@ -207,9 +207,10 @@ export function uploadString(
  *      folder. `nextPageToken` is never returned.
  */
 export function listAll(ref: Reference): Promise<ListResult> {
-  const accumulator = {
+  const accumulator: ListResult = {
     prefixes: [],
-    items: []
+    items: [],
+    nextPageToken: null
   };
   return listAllHelper(ref, accumulator).then(() => accumulator);
 }

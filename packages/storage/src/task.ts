@@ -63,7 +63,7 @@ export class UploadTask {
   transferred_: number = 0;
   private needToFetchStatus_: boolean = false;
   private needToFetchMetadata_: boolean = false;
-  private observers_: Array<StorageObserver<T>> = [];
+  private observers_: Array<StorageObserver<UploadTaskSnapshot>> = [];
   private resumable_: boolean;
   state_: InternalTaskState;
   private error_: Error | null = null;
@@ -72,7 +72,7 @@ export class UploadTask {
   private chunkMultiplier_: number = 1;
   private errorHandler_: (p1: FirebaseStorageError) => void;
   private metadataErrorHandler_: (p1: FirebaseStorageError) => void;
-  private resolve_: ((p1:UploadTaskSnapshot) => void) | null = null;
+  private resolve_: ((p1: UploadTaskSnapshot) => void) | null = null;
   private reject_: ((p1: Error) => void) | null = null;
   private promise_: Promise<UploadTaskSnapshot>;
 
@@ -443,7 +443,10 @@ export class UploadTask {
    */
   on(
     type: TaskEvent,
-    nextOrObserver?: Partial<StorageObserver<UploadTaskSnapshot>> | null | ((a: UploadTaskSnapshot) => unknown),
+    nextOrObserver?:
+      | Partial<StorageObserver<UploadTaskSnapshot>>
+      | null
+      | ((a: UploadTaskSnapshot) => unknown),
     error?: ErrorFn | null,
     completed?: CompleteFn | null
   ): Unsubscribe | Subscribe<UploadTaskSnapshot> {
@@ -487,9 +490,14 @@ export class UploadTask {
     validate('on', specs, arguments);
     const self = this;
 
-    function makeBinder(specs: ArgSpec[] | null): Subscribe<UploadTaskSnapshot> {
+    function makeBinder(
+      specs: ArgSpec[] | null
+    ): Subscribe<UploadTaskSnapshot> {
       function binder(
-        nextOrObserver?: NextFn<T> | StorageObserver<UploadTaskSnapshot> | null,
+        nextOrObserver?:
+          | NextFn<UploadTaskSnapshot>
+          | StorageObserver<UploadTaskSnapshot>
+          | null,
         error?: ErrorFn | null,
         complete?: CompleteFn | null
       ): () => void {
