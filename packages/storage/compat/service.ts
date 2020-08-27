@@ -48,8 +48,6 @@ export function pathValidator(path: unknown): void {
 /**
  * A service that provides firebaseStorage.Reference instances.
  * @param opt_url gs:// url to a custom Storage Bucket
- *
- * @struct
  */
 export class StorageServiceCompat implements types.FirebaseStorage {
   constructor(
@@ -104,20 +102,20 @@ export class StorageServiceCompat implements types.FirebaseStorage {
 }
 
 /**
- * @struct
+ * @internal
  */
 export class ServiceInternals {
-  service_: StorageServiceCompat;
+  _service: StorageServiceCompat;
 
   constructor(service: StorageServiceCompat) {
-    this.service_ = service;
+    this._service = service;
   }
 
   /**
    * Called when the associated app is deleted.
    */
   delete(): Promise<void> {
-    this.service_.delegate.deleteApp();
+    this._service.delegate.deleteApp();
     return Promise.resolve();
   }
 }

@@ -19,13 +19,8 @@
  * @fileoverview Defines the Firebase Storage Reference class.
  */
 import { FbsBlob } from './implementation/blob';
-import * as errorsExports from './implementation/error';
 import { Location } from './implementation/location';
-import {
-  metadataValidator,
-  Mappings,
-  getMappings
-} from './implementation/metadata';
+import { metadataValidator, getMappings } from './implementation/metadata';
 import * as path from './implementation/path';
 import * as requests from './implementation/requests';
 import {
@@ -39,6 +34,11 @@ import { StorageService } from './service';
 import { ListOptions, ListResult } from './list';
 import { uploadDataSpec, listOptionSpec } from './implementation/args';
 import { UploadTask } from './task';
+import {
+  invalidArgument,
+  invalidRootOperation,
+  noDownloadURL
+} from './implementation/error';
 
 /**
  * Provides methods to interact with a bucket in the Firebase Storage service.
@@ -76,13 +76,6 @@ export class Reference {
   }
 
   /**
-   * @internal
-   */
-  mappings(): Mappings {
-    return getMappings();
-  }
-
-  /**
    * @returns An reference to the root of this
    *     object's bucket.
    */
@@ -113,7 +106,7 @@ export class Reference {
 
   throwIfRoot_(name: string): void {
     if (this.location.path === '') {
-      throw errorsExports.invalidRootOperation(name);
+      throw invalidRootOperation(name);
     }
   }
 }
@@ -132,15 +125,9 @@ export function uploadBytes(
   data: Blob | Uint8Array | ArrayBuffer,
   metadata: Metadata | null = null
 ): UploadTask {
-  try {
-    uploadDataSpec().validator(data);
-  } catch (e) {
-    throw errorsExports.invalidArgument(1, 'uploadBytes', e.message);
-  }
-  try {
-    metadata && metadataValidator(metadata);
-  } catch (e) {
-    throw errorsExports.invalidArgument(2, 'uploadBytes', e.message);
+  uploadDataSpec().validator(data);
+  if (metadata != null) {
+    metadataValidator(metadata);
   }
   ref.throwIfRoot_('uploadBytes');
   return new UploadTask(ref, new FbsBlob(data), metadata);
@@ -163,29 +150,20 @@ export function uploadString(
   metadata?: Metadata
 ): UploadTask {
   if (typeof value !== 'string') {
-    throw errorsExports.invalidArgument(
+    throw invalidArgument(
       1,
       'uploadString',
       'Must provide a string to upload.'
     );
   }
-  try {
-    formatValidator(format);
-  } catch (e) {
-    throw errorsExports.invalidArgument(2, 'uploadString', e.message);
-  }
-  try {
-    metadata && metadataValidator(metadata);
-  } catch (e) {
-    throw errorsExports.invalidArgument(3, 'uploadString', e.message);
+  formatValidator(format);
+  if (metadata != null) {
+    metadataValidator(metadata);
   }
   ref.throwIfRoot_('putString');
   const data = dataFromString(format, value);
-  const metadataClone = Object.assign({}, metadata);
-  if (
-    !type.isDef(metadataClone['contentType']) &&
-    type.isDef(data.contentType)
-  ) {
+  const metadataClone = { ...metadata } as Metadata;
+  if (metadataClone['contentType'] == null && data.contentType != null) {
     metadataClone['contentType'] = data.contentType!;
   }
   return new UploadTask(ref, new FbsBlob(data.data, true), metadataClone);
@@ -269,10 +247,8 @@ export function list(
   ref: Reference,
   options?: ListOptions | null
 ): Promise<ListResult> {
-  try {
-    options && listOptionSpec().validator(options);
-  } catch (e) {
-    throw errorsExports.invalidArgument(1, 'list', e.message);
+  if (options != null) {
+    listOptionSpec().validator(options);
   }
   return ref.service.getAuthToken().then(authToken => {
     const op = options || {};
@@ -300,7 +276,7 @@ export function getMetadata(ref: Reference): Promise<Metadata> {
     const requestInfo = requests.getMetadata(
       ref.service,
       ref.location,
-      ref.mappings()
+      getMappings()
     );
     return ref.service.makeRequest(requestInfo, authToken).getPromise();
   });
@@ -321,18 +297,14 @@ export function updateMetadata(
   ref: Reference,
   metadata: Metadata
 ): Promise<Metadata> {
-  try {
-    metadataValidator(metadata);
-  } catch (e) {
-    throw errorsExports.invalidArgument(1, 'uploadBytes', e.message);
-  }
+  metadataValidator(metadata);
   ref.throwIfRoot_('updateMetadata');
   return ref.service.getAuthToken().then(authToken => {
     const requestInfo = requests.updateMetadata(
       ref.service,
       ref.location,
       metadata,
-      ref.mappings()
+      getMappings()
     );
     return ref.service.makeRequest(requestInfo, authToken).getPromise();
   });
@@ -349,14 +321,14 @@ export function getDownloadURL(ref: Reference): Promise<string> {
     const requestInfo = requests.getDownloadUrl(
       ref.service,
       ref.location,
-      ref.mappings()
+      getMappings()
     );
     return ref.service
       .makeRequest(requestInfo, authToken)
       .getPromise()
       .then(url => {
         if (url === null) {
-          throw errorsExports.noDownloadURL();
+          throw noDownloadURL();
         }
         return url;
       });
@@ -393,7 +365,7 @@ export function getChild(ref: Reference, childPath: string): Reference {
   return new Reference(ref.service, location);
 }
 /**
- * @public
+ * @internal
  * @param ref - Storage Reference to get parent of.
  * @returns A reference to the parent of the
  * current object, or null if the current object is the root.

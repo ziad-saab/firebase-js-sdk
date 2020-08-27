@@ -24,6 +24,7 @@ import path from 'path';
 const deps = Object.keys(
   Object.assign({}, pkg.peerDependencies, pkg.dependencies)
 ).concat('@firebase/app-exp');
+
 /**
  * ES5 Builds
  */

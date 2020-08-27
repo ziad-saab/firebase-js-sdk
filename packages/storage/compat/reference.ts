@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,7 +42,7 @@ import { ListOptions } from '../src/list';
 import { UploadTaskCompat } from './task';
 import { ListResultCompat } from './list';
 import { StorageServiceCompat } from './service';
-import * as errorsExports from '../src/implementation/error';
+import { invalidRootOperation } from '../src/implementation/error';
 
 export class ReferenceCompat implements types.Reference {
   constructor(private readonly delegate: Reference) {}
@@ -62,8 +62,8 @@ export class ReferenceCompat implements types.Reference {
 
   /**
    * @return A reference to the object obtained by
-   *     appending childPath, removing any duplicate, beginning, or trailing
-   *     slashes.
+   * appending childPath, removing any duplicate, beginning, or trailing
+   * slashes.
    */
   child(childPath: string): types.Reference {
     validate('child', [stringSpec()], arguments);
@@ -77,10 +77,9 @@ export class ReferenceCompat implements types.Reference {
 
   /**
    * @return A reference to the parent of the
-   *     current object, or null if the current object is the root.
+   * current object, or null if the current object is the root.
    */
   get parent(): types.Reference | null {
-    validate('parent', [], arguments);
     const reference = getParent(this.delegate);
     if (reference == null) {
       return null;
@@ -92,25 +91,26 @@ export class ReferenceCompat implements types.Reference {
    * Uploads a blob to this object's location.
    * @param data The blob to upload.
    * @return An UploadTask that lets you control and
-   *     observe the upload.
+   * observe the upload.
    */
   put(
     data: Blob | Uint8Array | ArrayBuffer,
     metadata?: Metadata
   ): types.UploadTask {
     validate('put', [uploadDataSpec(), metadataSpec(true)], arguments);
-    this.throwIfRoot_('put');
+    this._throwIfRoot('put');
     return new UploadTaskCompat(
       uploadBytes(this.delegate, data, metadata),
       this
     );
   }
+
   /**
    * Uploads a string to this object's location.
    * @param value The string to upload.
    * @param format The format of the string to upload.
    * @return An UploadTask that lets you control and
-   *     observe the upload.
+   * observe the upload.
    */
   putString(
     value: string,
@@ -122,7 +122,7 @@ export class ReferenceCompat implements types.Reference {
       [stringSpec(), stringSpec(formatValidator, true), metadataSpec(true)],
       arguments
     );
-    this.throwIfRoot_('putString');
+    this._throwIfRoot('putString');
     return new UploadTaskCompat(
       uploadString(this.delegate, value, format, metadata),
       this
@@ -142,9 +142,9 @@ export class ReferenceCompat implements types.Reference {
    * too many results.
    *
    * @return A Promise that resolves with all the items and prefixes under
-   *      the current storage reference. `prefixes` contains references to
-   *      sub-directories and `items` contains references to objects in this
-   *      folder. `nextPageToken` is never returned.
+   *  the current storage reference. `prefixes` contains references to
+   *  sub-directories and `items` contains references to objects in this
+   *  folder. `nextPageToken` is never returned.
    */
   listAll(): Promise<types.ListResult> {
     validate('listAll', [], arguments);
@@ -169,9 +169,9 @@ export class ReferenceCompat implements types.Reference {
    *
    * @param options See ListOptions for details.
    * @return A Promise that resolves with the items and prefixes.
-   *      `prefixes` contains references to sub-folders and `items`
-   *      contains references to objects in this folder. `nextPageToken`
-   *      can be used to get the rest of the results.
+   * `prefixes` contains references to sub-folders and `items`
+   * contains references to objects in this folder. `nextPageToken`
+   * can be used to get the rest of the results.
    */
   list(options?: ListOptions | null): Promise<types.ListResult> {
     validate('list', [listOptionSpec(true)], arguments);
@@ -181,9 +181,9 @@ export class ReferenceCompat implements types.Reference {
   }
 
   /**
-   *     A promise that resolves with the metadata for this object. If this
-   *     object doesn't exist or metadata cannot be retreived, the promise is
-   *     rejected.
+   * A promise that resolves with the metadata for this object. If this
+   * object doesn't exist or metadata cannot be retreived, the promise is
+   * rejected.
    */
   getMetadata(): Promise<Metadata> {
     validate('getMetadata', [], arguments);
@@ -193,11 +193,11 @@ export class ReferenceCompat implements types.Reference {
   /**
    * Updates the metadata for this object.
    * @param metadata The new metadata for the object.
-   *     Only values that have been explicitly set will be changed. Explicitly
-   *     setting a value to null will remove the metadata.
+   * Only values that have been explicitly set will be changed. Explicitly
+   * setting a value to null will remove the metadata.
    * @return A promise that resolves
-   *     with the new metadata for this object.
-   *     @see firebaseStorage.Reference.prototype.getMetadata
+   * with the new metadata for this object.
+   * @see firebaseStorage.Reference.prototype.getMetadata
    */
   updateMetadata(metadata: Metadata): Promise<Metadata> {
     validate('updateMetadata', [metadataSpec()], arguments);
@@ -206,7 +206,7 @@ export class ReferenceCompat implements types.Reference {
 
   /**
    * @return A promise that resolves with the download
-   *     URL for this object.
+   * URL for this object.
    */
   getDownloadURL(): Promise<string> {
     validate('getDownloadURL', [], arguments);
@@ -219,13 +219,13 @@ export class ReferenceCompat implements types.Reference {
    */
   delete(): Promise<void> {
     validate('delete', [], arguments);
-    this.throwIfRoot_('delete');
+    this._throwIfRoot('delete');
     return deleteObject(this.delegate);
   }
 
-  private throwIfRoot_(name: string): void {
+  private _throwIfRoot(name: string): void {
     if (this.delegate.location.path === '') {
-      throw errorsExports.invalidRootOperation(name);
+      throw invalidRootOperation(name);
     }
   }
 }

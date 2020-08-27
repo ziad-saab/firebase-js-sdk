@@ -239,15 +239,30 @@ export function noDownloadURL(): FirebaseStorageError {
   );
 }
 
+export function invalidArgument(message: string): FirebaseStorageError;
 export function invalidArgument(
-  index: number,
+  index: number | string,
   fnName: string,
   message: string
+): FirebaseStorageError;
+export function invalidArgument(
+  indexOrMessage: number | string,
+  fnName?: string,
+  message?: string
 ): FirebaseStorageError {
-  return new FirebaseStorageError(
-    Code.INVALID_ARGUMENT,
-    'Invalid argument in `' + fnName + '` at index ' + index + ': ' + message
-  );
+  if (typeof indexOrMessage === 'string') {
+    return new FirebaseStorageError(Code.INVALID_ARGUMENT, indexOrMessage);
+  } else {
+    return new FirebaseStorageError(
+      Code.INVALID_ARGUMENT,
+      'Invalid argument in `' +
+        fnName +
+        '` at index ' +
+        indexOrMessage +
+        ': ' +
+        message
+    );
+  }
 }
 
 export function invalidArgumentCount(

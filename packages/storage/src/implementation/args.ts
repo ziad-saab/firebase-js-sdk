@@ -14,10 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as errorsExports from './error';
-import * as MetadataUtils from './metadata';
-import * as ListOptionsUtils from './list';
-import * as type from './type';
+import { invalidArgumentCount, invalidArgument } from './error';
+import { metadataValidator } from './metadata';
+import { listOptionsValidator } from './list';
+import {
+  isJustDef,
+  isNativeBlobDefined,
+  isString,
+  isNumber,
+  isFunction
+} from './type';
 
 /**
  * @param name Name of the function.
@@ -40,29 +46,21 @@ export function validate(
   }
   const validLength = minArgs <= passed.length && passed.length <= maxArgs;
   if (!validLength) {
-    throw errorsExports.invalidArgumentCount(
-      minArgs,
-      maxArgs,
-      name,
-      passed.length
-    );
+    throw invalidArgumentCount(minArgs, maxArgs, name, passed.length);
   }
   for (let i = 0; i < passed.length; i++) {
     try {
       specs[i].validator(passed[i]);
     } catch (e) {
       if (e instanceof Error) {
-        throw errorsExports.invalidArgument(i, name, e.message);
+        throw invalidArgument(i, name, e.message);
       } else {
-        throw errorsExports.invalidArgument(i, name, e);
+        throw invalidArgument(i, name, e);
       }
     }
   }
 }
 
-/**
- * @struct
- */
 export class ArgSpec {
   validator: (p1: unknown) => void;
   optional: boolean;
@@ -70,7 +68,7 @@ export class ArgSpec {
   constructor(validator: (p1: unknown) => void, optional?: boolean) {
     const self = this;
     this.validator = function (p: unknown) {
-      if (self.optional && !type.isJustDef(p)) {
+      if (self.optional && !isJustDef(p)) {
         return;
       }
       validator(p);
@@ -94,7 +92,7 @@ export function stringSpec(
   optional?: boolean
 ): ArgSpec {
   function stringValidator(p: unknown): void {
-    if (!type.isString(p)) {
+    if (!isString(p)) {
       throw 'Expected string.';
     }
   }
@@ -112,25 +110,25 @@ export function uploadDataSpec(): ArgSpec {
     const valid =
       p instanceof Uint8Array ||
       p instanceof ArrayBuffer ||
-      (type.isNativeBlobDefined() && p instanceof Blob);
+      (isNativeBlobDefined() && p instanceof Blob);
     if (!valid) {
-      throw 'Expected Blob or File.';
+      throw invalidArgument('Expected Blob or File.');
     }
   }
   return new ArgSpec(validator);
 }
 
 export function metadataSpec(optional?: boolean): ArgSpec {
-  return new ArgSpec(MetadataUtils.metadataValidator, optional);
+  return new ArgSpec(metadataValidator, optional);
 }
 
 export function listOptionSpec(optional?: boolean): ArgSpec {
-  return new ArgSpec(ListOptionsUtils.listOptionsValidator, optional);
+  return new ArgSpec(listOptionsValidator, optional);
 }
 
 export function nonNegativeNumberSpec(): ArgSpec {
   function validator(p: unknown): void {
-    const valid = type.isNumber(p) && p >= 0;
+    const valid = isNumber(p) && p >= 0;
     if (!valid) {
       throw 'Expected a number 0 or greater.';
     }
@@ -143,7 +141,7 @@ export function looseObjectSpec(
   optional?: boolean
 ): ArgSpec {
   function isLooseObjectValidator(p: unknown): void {
-    const isLooseObject = p === null || (type.isDef(p) && p instanceof Object);
+    const isLooseObject = p === null || (p != null && p instanceof Object);
     if (!isLooseObject) {
       throw 'Expected an Object.';
     }
@@ -156,7 +154,7 @@ export function looseObjectSpec(
 
 export function nullFunctionSpec(optional?: boolean): ArgSpec {
   function validator(p: unknown): void {
-    const valid = p === null || type.isFunction(p);
+    const valid = p === null || isFunction(p);
     if (!valid) {
       throw 'Expected a Function.';
     }

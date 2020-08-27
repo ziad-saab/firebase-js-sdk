@@ -26,7 +26,11 @@ import { Provider } from '@firebase/component';
 import { FirebaseAuthInternalName } from '@firebase/auth-interop-types';
 import { FirebaseOptions } from '@firebase/app-types-exp';
 import * as constants from '../src/implementation/constants';
-import * as errorsExports from './implementation/error';
+import {
+  invalidArgument,
+  appDeleted,
+  noDefaultBucket
+} from './implementation/error';
 
 export function isUrl(path?: string): boolean {
   return /^[A-Za-z]+:\/\//.test(path as string);
@@ -49,10 +53,10 @@ function refFromPath(
 ): Reference | null {
   if (ref instanceof StorageService) {
     const service = ref;
-    if (service.bucket_ == null) {
-      throw errorsExports.noDefaultBucket();
+    if (service._bucket == null) {
+      throw noDefaultBucket();
     }
-    const reference = new Reference(service, service.bucket_!);
+    const reference = new Reference(service, service._bucket!);
     if (path != null) {
       return refFromPath(reference, path);
     } else {
@@ -62,11 +66,7 @@ function refFromPath(
     // ref is a Reference
     if (typeof path === 'string') {
       if (path.includes('..')) {
-        throw errorsExports.invalidArgument(
-          1,
-          'ref',
-          '`path` param cannot contain ".."'
-        );
+        throw invalidArgument('`path` param cannot contain ".."');
       }
       return getChild(ref, path);
     } else {
@@ -95,9 +95,7 @@ export function ref(
     if (serviceOrRef instanceof StorageService) {
       return refFromURL(serviceOrRef, pathOrUrl);
     } else {
-      throw errorsExports.invalidArgument(
-        0,
-        'ref',
+      throw invalidArgument(
         'To use ref(service, url), the first argument must be a Storage instance.'
       );
     }
@@ -108,9 +106,7 @@ export function ref(
     ) {
       return refFromPath(serviceOrRef, pathOrUrl);
     } else {
-      throw errorsExports.invalidArgument(
-        0,
-        'ref',
+      throw invalidArgument(
         'To use ref(serviceOrRef, path), the first argument must be a Storage' +
           ' instance or Reference.'
       );
@@ -120,9 +116,7 @@ export function ref(
     if (serviceOrRef instanceof StorageService) {
       return refFromPath(serviceOrRef);
     } else {
-      throw errorsExports.invalidArgument(
-        0,
-        'ref',
+      throw invalidArgument(
         'To get the root reference, a Storage instance must be provided as' +
           ' the param. Example: ref(storageInstance);'
       );
@@ -133,22 +127,20 @@ export function ref(
 /**
  * A service that provides Firebase Storage Reference instances.
  * @param opt_url gs:// url to a custom Storage Bucket
- *
- * @struct
  */
 export class StorageService {
   /**
    * @internal
    */
-  readonly bucket_: Location | null = null;
-  protected readonly appId_: string | null = null;
-  private readonly requests_: Set<Request<unknown>>;
+  readonly _bucket: Location | null = null;
+  protected readonly _appId: string | null = null;
+  private readonly _requests: Set<Request<unknown>>;
   /**
    * @internal
    */
-  deleted_: boolean = false;
-  protected maxOperationRetryTime_: number;
-  protected maxUploadRetryTime_: number;
+  private _deleted: boolean = false;
+  maxOperationRetryTime: number;
+  maxUploadRetryTime: number;
 
   constructor(
     readonly app: FirebaseApp,
@@ -156,13 +148,13 @@ export class StorageService {
     readonly pool_: XhrIoPool,
     readonly url_?: string
   ) {
-    this.maxOperationRetryTime_ = constants.DEFAULT_MAX_OPERATION_RETRY_TIME;
-    this.maxUploadRetryTime_ = constants.DEFAULT_MAX_UPLOAD_RETRY_TIME;
-    this.requests_ = new Set();
+    this.maxOperationRetryTime = constants.DEFAULT_MAX_OPERATION_RETRY_TIME;
+    this.maxUploadRetryTime = constants.DEFAULT_MAX_UPLOAD_RETRY_TIME;
+    this._requests = new Set();
     if (url_ != null) {
-      this.bucket_ = Location.makeFromBucketSpec(url_);
+      this._bucket = Location.makeFromBucketSpec(url_);
     } else {
-      this.bucket_ = StorageService.extractBucket_(this.app.options);
+      this._bucket = StorageService.extractBucket_(this.app.options);
     }
   }
 
@@ -190,9 +182,9 @@ export class StorageService {
    * @internal
    */
   deleteApp(): void {
-    this.deleted_ = true;
-    this.requests_.forEach(request => request.cancel());
-    this.requests_.clear();
+    this._deleted = true;
+    this._requests.forEach(request => request.cancel());
+    this._requests.clear();
   }
 
   /**
@@ -215,38 +207,22 @@ export class StorageService {
     requestInfo: RequestInfo<T>,
     authToken: string | null
   ): Request<T> {
-    if (!this.deleted_) {
+    if (!this._deleted) {
       const request = makeRequest(
         requestInfo,
-        this.appId_,
+        this._appId,
         authToken,
         this.pool_
       );
-      this.requests_.add(request);
+      this._requests.add(request);
       // Request removes itself from set when complete.
       request.getPromise().then(
-        () => this.requests_.delete(request),
-        () => this.requests_.delete(request)
+        () => this._requests.delete(request),
+        () => this._requests.delete(request)
       );
       return request;
     } else {
-      return new FailRequest(errorsExports.appDeleted());
+      return new FailRequest(appDeleted());
     }
-  }
-
-  get maxUploadRetryTime(): number {
-    return this.maxUploadRetryTime_;
-  }
-
-  set maxUploadRetryTime(time: number) {
-    this.maxUploadRetryTime_ = time;
-  }
-
-  get maxOperationRetryTime(): number {
-    return this.maxOperationRetryTime_;
-  }
-
-  set maxOperationRetryTime(time: number) {
-    this.maxOperationRetryTime_ = time;
   }
 }

@@ -44,7 +44,7 @@ export const emptyAuthProvider = new Provider<FirebaseAuthInternalName>(
 export function makeFakeApp(bucketArg?: string): FirebaseApp {
   const app: any = {};
   app.options = {};
-  if (type.isDef(bucketArg)) {
+  if (bucketArg != null) {
     app.options[constants.CONFIG_STORAGE_BUCKET_KEY] = bucketArg;
   } else {
     app.options[constants.CONFIG_STORAGE_BUCKET_KEY] = bucket;

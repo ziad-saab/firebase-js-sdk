@@ -23,6 +23,7 @@ import * as json from './json';
 import * as type from './type';
 import { ListResult } from '../list';
 import { StorageService } from '../service';
+import { invalidArgument } from './error';
 
 /**
  * Represents the simplified object metadata returned by List API.
@@ -95,25 +96,34 @@ export function fromResponseString(
 
 export function listOptionsValidator(p: unknown): void {
   if (!type.isObject(p) || !p) {
-    throw 'Expected ListOptions object.';
+    throw invalidArgument('Expected ListOptions object.');
   }
+  const listOptionsErrorPrefix = 'Incorrect format for ListOptions: ';
   for (const key in p) {
     if (key === MAX_RESULTS_KEY) {
       if (
         !type.isInteger(p[MAX_RESULTS_KEY]) ||
         (p[MAX_RESULTS_KEY] as number) <= 0
       ) {
-        throw 'Expected maxResults to be a positive number.';
+        throw invalidArgument(
+          listOptionsErrorPrefix +
+            'Expected maxResults to be a positive number.'
+        );
       }
       if ((p[MAX_RESULTS_KEY] as number) > 1000) {
-        throw `Expected maxResults to be less than or equal to ${MAX_MAX_RESULTS}.`;
+        throw invalidArgument(
+          listOptionsErrorPrefix +
+            `Expected maxResults to be less than or equal to ${MAX_MAX_RESULTS}.`
+        );
       }
     } else if (key === PAGE_TOKEN_KEY) {
       if (p[PAGE_TOKEN_KEY] && !type.isString(p[PAGE_TOKEN_KEY])) {
-        throw 'Expected pageToken to be string.';
+        throw invalidArgument(
+          listOptionsErrorPrefix + 'Expected pageToken to be string.'
+        );
       }
     } else {
-      throw 'Unknown option: ' + key;
+      throw invalidArgument(listOptionsErrorPrefix + 'Unknown option: ' + key);
     }
   }
 }

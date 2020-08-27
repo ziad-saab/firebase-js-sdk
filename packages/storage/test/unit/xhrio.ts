@@ -116,7 +116,7 @@ export class TestingXhrIo implements XhrIo {
 
   getResponseHeader(header: string): string | null {
     const headerValue = this.headers[header.toLowerCase()];
-    if (type.isDef(headerValue)) {
+    if (headerValue != null) {
       return headerValue;
     } else {
       return null;

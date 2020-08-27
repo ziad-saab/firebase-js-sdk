@@ -50,6 +50,7 @@ import * as fbsMetadata from './implementation/metadata';
 import * as fbsRequests from './implementation/requests';
 import * as typeUtils from './implementation/type';
 import { Reference } from './reference';
+import { getMappings } from './implementation/metadata';
 
 /**
  * Represents a blob being uploaded. Can be used to pause/resume/cancel the
@@ -85,7 +86,7 @@ export class UploadTask {
     this.ref_ = ref;
     this.blob_ = blob;
     this.metadata_ = metadata;
-    this.mappings_ = ref.mappings();
+    this.mappings_ = getMappings();
     this.resumable_ = this.shouldDoResumable_(this.blob_);
     this.state_ = InternalTaskState.RUNNING;
     this.errorHandler_ = error => {

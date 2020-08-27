@@ -34,9 +34,6 @@ export type Subscribe<T> = (
   complete?: CompleteFn | null
 ) => Unsubscribe;
 
-/**
- * @struct
- */
 export class Observer<T> implements StorageObserver<T> {
   next?: NextFn<T> | null;
   error?: ErrorFn | null;
@@ -48,9 +45,7 @@ export class Observer<T> implements StorageObserver<T> {
     complete?: CompleteFn | null
   ) {
     const asFunctions =
-      type.isFunction(nextOrObserver) ||
-      type.isDef(error) ||
-      type.isDef(complete);
+      type.isFunction(nextOrObserver) || error != null || complete != null;
     if (asFunctions) {
       this.next = nextOrObserver as NextFn<T> | null;
       this.error = error || null;

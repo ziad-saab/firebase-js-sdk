@@ -35,9 +35,6 @@ import * as UrlUtils from './url';
 import { Headers, XhrIo, ErrorCode } from './xhrio';
 import { XhrIoPool } from './xhriopool';
 
-/**
- * @template T
- */
 export interface Request<T> {
   getPromise(): Promise<T>;
 
@@ -51,10 +48,6 @@ export interface Request<T> {
   cancel(appDelete?: boolean): void;
 }
 
-/**
- * @struct
- * @template T
- */
 class NetworkRequest<T> implements Request<T> {
   private url_: string;
   private method_: string;
@@ -249,7 +242,6 @@ class NetworkRequest<T> implements Request<T> {
 /**
  * A collection of information about the result of a network request.
  * @param opt_canceled Defaults to false.
- * @struct
  */
 export class RequestEndStatus {
   /**
@@ -287,9 +279,6 @@ export function addGmpidHeader_(headers: Headers, appId: string | null): void {
   }
 }
 
-/**
- * @template T
- */
 export function makeRequest<T>(
   requestInfo: RequestInfo<T>,
   appId: string | null,
