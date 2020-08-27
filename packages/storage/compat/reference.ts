@@ -47,7 +47,6 @@ import * as errorsExports from '../src/implementation/error';
 export class ReferenceCompat implements types.Reference {
   constructor(private readonly delegate: Reference) {}
 
-  root = new ReferenceCompat(this.delegate.root) as types.Reference;
   storage = new StorageServiceCompat(
     this.delegate.storage,
     ref => new ReferenceCompat(ref)
@@ -70,6 +69,10 @@ export class ReferenceCompat implements types.Reference {
     validate('child', [stringSpec()], arguments);
     const reference = getChild(this.delegate, childPath);
     return new ReferenceCompat(reference);
+  }
+
+  get root(): types.Reference {
+    return new ReferenceCompat(this.delegate.root) as types.Reference;
   }
 
   /**

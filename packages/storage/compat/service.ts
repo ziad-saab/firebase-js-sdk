@@ -60,6 +60,7 @@ export class StorageServiceCompat implements types.FirebaseStorage {
   app = this.delegate.app;
   maxOperationRetryTime = this.delegate.maxOperationRetryTime;
   maxUploadRetryTime = this.delegate.maxUploadRetryTime;
+  INTERNAL = new ServiceInternals(this);
 
   /**
    * Returns a firebaseStorage.Reference for the given path in the default
@@ -106,9 +107,9 @@ export class StorageServiceCompat implements types.FirebaseStorage {
  * @struct
  */
 export class ServiceInternals {
-  service_: StorageService;
+  service_: StorageServiceCompat;
 
-  constructor(service: StorageService) {
+  constructor(service: StorageServiceCompat) {
     this.service_ = service;
   }
 
@@ -116,7 +117,7 @@ export class ServiceInternals {
    * Called when the associated app is deleted.
    */
   delete(): Promise<void> {
-    this.service_.deleteApp();
+    this.service_.delegate.deleteApp();
     return Promise.resolve();
   }
 }

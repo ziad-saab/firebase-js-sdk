@@ -17,10 +17,15 @@
 import { assert } from 'chai';
 import { TaskEvent } from '../../src/implementation/taskenums';
 import { XhrIoPool } from '../../src/implementation/xhriopool';
-import { StorageService } from '../../src/service';
+import { StorageServiceCompat } from '../../compat/service';
 import * as testShared from './testshared';
 import { DEFAULT_HOST } from '../../src/implementation/constants';
 import { FirebaseStorageError } from '../../src/implementation/error';
+import { StorageService } from '../../src/service';
+import { ReferenceCompat } from '../../compat/reference';
+import { FirebaseApp } from '@firebase/app-types';
+import { Provider } from '@firebase/component';
+import { FirebaseAuthInternalName } from '@firebase/auth-interop-types';
 
 const fakeAppGs = testShared.makeFakeApp('gs://mybucket');
 const fakeAppGsEndingSlash = testShared.makeFakeApp('gs://mybucket/');
@@ -31,9 +36,21 @@ function makeGsUrl(child: string = ''): string {
   return 'gs://' + testShared.bucket + '/' + child;
 }
 
+function makeService(
+  app: FirebaseApp,
+  authProvider: Provider<FirebaseAuthInternalName>,
+  pool: XhrIoPool,
+  url?: string
+): StorageServiceCompat {
+  return new StorageServiceCompat(
+    new StorageService(app, authProvider, pool, url),
+    ref => new ReferenceCompat(ref)
+  );
+}
+
 describe('Firebase Storage > Service', () => {
   describe('simple constructor', () => {
-    const service = new StorageService(
+    const service = makeService(
       testShared.fakeApp,
       testShared.fakeAuthProvider,
       xhrIoPool
@@ -67,7 +84,7 @@ describe('Firebase Storage > Service', () => {
   });
   describe('custom bucket constructor', () => {
     it('gs:// custom bucket constructor refs point to the right place', () => {
-      const service = new StorageService(
+      const service = makeService(
         testShared.fakeApp,
         testShared.fakeAuthProvider,
         xhrIoPool,
@@ -77,7 +94,7 @@ describe('Firebase Storage > Service', () => {
       assert.equal(ref.toString(), 'gs://foo-bar.appspot.com/');
     });
     it('http:// custom bucket constructor refs point to the right place', () => {
-      const service = new StorageService(
+      const service = makeService(
         testShared.fakeApp,
         testShared.fakeAuthProvider,
         xhrIoPool,
@@ -87,7 +104,7 @@ describe('Firebase Storage > Service', () => {
       assert.equal(ref.toString(), 'gs://foo-bar.appspot.com/');
     });
     it('https:// custom bucket constructor refs point to the right place', () => {
-      const service = new StorageService(
+      const service = makeService(
         testShared.fakeApp,
         testShared.fakeAuthProvider,
         xhrIoPool,
@@ -98,7 +115,7 @@ describe('Firebase Storage > Service', () => {
     });
 
     it('Bare bucket name constructor refs point to the right place', () => {
-      const service = new StorageService(
+      const service = makeService(
         testShared.fakeApp,
         testShared.fakeAuthProvider,
         xhrIoPool,
@@ -108,7 +125,7 @@ describe('Firebase Storage > Service', () => {
       assert.equal(ref.toString(), 'gs://foo-bar.appspot.com/');
     });
     it('Child refs point to the right place', () => {
-      const service = new StorageService(
+      const service = makeService(
         testShared.fakeApp,
         testShared.fakeAuthProvider,
         xhrIoPool,
@@ -119,7 +136,7 @@ describe('Firebase Storage > Service', () => {
     });
     it('Throws trying to construct with a gs:// URL containing an object path', () => {
       const error = testShared.assertThrows(() => {
-        new StorageService(
+        makeService(
           testShared.fakeApp,
           testShared.fakeAuthProvider,
           xhrIoPool,
@@ -131,7 +148,7 @@ describe('Firebase Storage > Service', () => {
   });
   describe('default bucket config', () => {
     it('gs:// works without ending slash', () => {
-      const service = new StorageService(
+      const service = makeService(
         fakeAppGs,
         testShared.fakeAuthProvider,
         xhrIoPool
@@ -139,7 +156,7 @@ describe('Firebase Storage > Service', () => {
       assert.equal(service.ref().toString(), 'gs://mybucket/');
     });
     it('gs:// works with ending slash', () => {
-      const service = new StorageService(
+      const service = makeService(
         fakeAppGsEndingSlash,
         testShared.fakeAuthProvider,
         xhrIoPool
@@ -148,16 +165,12 @@ describe('Firebase Storage > Service', () => {
     });
     it('Throws when config bucket is gs:// with an object path', () => {
       testShared.assertThrows(() => {
-        new StorageService(
-          fakeAppInvalidGs,
-          testShared.fakeAuthProvider,
-          xhrIoPool
-        );
+        makeService(fakeAppInvalidGs, testShared.fakeAuthProvider, xhrIoPool);
       }, 'storage/invalid-default-bucket');
     });
   });
   describe('refFromURL', () => {
-    const service = new StorageService(
+    const service = makeService(
       testShared.fakeApp,
       testShared.fakeAuthProvider,
       xhrIoPool
@@ -213,7 +226,7 @@ GOOG4-RSA-SHA256`
     });
   });
   describe('Argument verification', () => {
-    const service = new StorageService(
+    const service = makeService(
       testShared.fakeApp,
       testShared.fakeAuthProvider,
       xhrIoPool
@@ -331,7 +344,7 @@ GOOG4-RSA-SHA256`
   });
 
   describe('Deletion', () => {
-    const service = new StorageService(
+    const service = makeService(
       testShared.fakeApp,
       testShared.fakeAuthProvider,
       xhrIoPool

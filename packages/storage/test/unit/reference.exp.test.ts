@@ -19,8 +19,19 @@ import { FirebaseApp } from '@firebase/app-types';
 import { StringFormat } from '../../src/implementation/string';
 import { Headers } from '../../src/implementation/xhrio';
 import { Metadata } from '../../src/metadata';
-import { Reference } from '../../src/reference';
-import { StorageService } from '../../src/service';
+import {
+  Reference,
+  uploadString,
+  uploadBytes,
+  deleteObject,
+  listAll,
+  list,
+  getMetadata,
+  updateMetadata,
+  getParent as parentReference,
+  getDownloadURL
+} from '../../src/reference';
+import { StorageService, ref } from '../../src/service';
 import * as testShared from './testshared';
 import { SendHook, TestingXhrIo } from './xhrio';
 import { DEFAULT_HOST } from '../../src/implementation/constants';
@@ -101,16 +112,16 @@ describe('Firebase Storage > Reference', () => {
     });
   });
 
-  describe('parent', () => {
+  describe('parentReference', () => {
     it('Returns null at root', () => {
-      assert.isNull(root.parent);
+      assert.isNull(parentReference(root));
     });
     it('Returns root one level down', () => {
-      assert.equal(child.parent!.toString(), 'gs://test-bucket/');
+      assert.equal(parentReference(child)!.toString(), 'gs://test-bucket/');
     });
     it('Works correctly with empty levels', () => {
       const s = makeStorage('gs://test-bucket/a///');
-      assert.equal(s.parent!.toString(), 'gs://test-bucket/a/');
+      assert.equal(parentReference(s)!.toString(), 'gs://test-bucket/a/');
     });
   });
 
@@ -150,22 +161,22 @@ describe('Firebase Storage > Reference', () => {
     });
   });
 
-  describe('child', () => {
+  describe('get child with ref()', () => {
     it('works with a simple string', () => {
-      assert.equal(root.child('a').toString(), 'gs://test-bucket/a');
+      assert.equal(ref(root, 'a').toString(), 'gs://test-bucket/a');
     });
     it('drops a trailing slash', () => {
-      assert.equal(root.child('ab/').toString(), 'gs://test-bucket/ab');
+      assert.equal(ref(root, 'ab/').toString(), 'gs://test-bucket/ab');
     });
     it('compresses repeated slashes', () => {
       assert.equal(
-        root.child('//a///b/////').toString(),
+        ref(root, '//a///b/////').toString(),
         'gs://test-bucket/a/b'
       );
     });
     it('works chained multiple times with leading slashes', () => {
       assert.equal(
-        root.child('a').child('/b').child('c').child('d/e').toString(),
+        ref(ref(ref(ref(root, 'a'), '/b'), 'c'), 'd/e').toString(),
         'gs://test-bucket/a/b/c/d/e'
       );
     });
@@ -189,8 +200,8 @@ describe('Firebase Storage > Reference', () => {
       testShared.emptyAuthProvider,
       newSend
     );
-    const ref = service.refFromURL('gs://test-bucket');
-    ref.child('foo').getMetadata();
+    const reference = ref(service, 'gs://test-bucket');
+    getMetadata(ref(reference, 'foo'));
   });
 
   it('Works if the user logs in before creating the storage reference', done => {
@@ -215,21 +226,22 @@ describe('Firebase Storage > Reference', () => {
       testShared.fakeAuthProvider,
       newSend
     );
-    const ref = service.refFromURL('gs://test-bucket');
-    ref.child('foo').getMetadata();
+    const reference = ref(service, 'gs://test-bucket');
+    getMetadata(ref(reference, 'foo'));
   });
 
-  describe('putString', () => {
+  describe('uploadString', () => {
     it('Uses metadata.contentType for RAW format', () => {
       // Regression test for b/30989476
-      const task = child.putString('hello', StringFormat.RAW, {
+      const task = uploadString(child, 'hello', StringFormat.RAW, {
         contentType: 'lol/wut'
       } as Metadata);
       assert.equal(task.snapshot.metadata!.contentType, 'lol/wut');
       task.cancel();
     });
     it('Uses embedded content type in DATA_URL format', () => {
-      const task = child.putString(
+      const task = uploadString(
+        child,
         'data:lol/wat;base64,aaaa',
         StringFormat.DATA_URL
       );
@@ -237,7 +249,8 @@ describe('Firebase Storage > Reference', () => {
       task.cancel();
     });
     it('Lets metadata.contentType override embedded content type in DATA_URL format', () => {
-      const task = child.putString(
+      const task = uploadString(
+        child,
         'data:ignore/me;base64,aaaa',
         StringFormat.DATA_URL,
         { contentType: 'tomato/soup' } as Metadata
@@ -248,59 +261,23 @@ describe('Firebase Storage > Reference', () => {
   });
 
   describe('Argument verification', () => {
-    describe('child', () => {
-      it('throws on no args', () => {
-        testShared.assertThrows(
-          testShared.bind(root.child, root),
-          'storage/invalid-argument-count'
-        );
-      });
-      it('throws on null instead of path', () => {
-        testShared.assertThrows(
-          testShared.bind(root.child, root, null),
-          'storage/invalid-argument'
-        );
-      });
-      it('throws on number instead of path', () => {
-        testShared.assertThrows(
-          testShared.bind(root.child, root, 3),
-          'storage/invalid-argument'
-        );
-      });
-    });
-
-    describe('toString', () => {
-      it('throws on number arg', () => {
-        testShared.assertThrows(
-          testShared.bind(root.toString, root, 3),
-          'storage/invalid-argument-count'
-        );
-      });
-    });
-
-    describe('put', () => {
+    describe('uploadBytes', () => {
       const blob = new Blob(['a']);
-      it('throws on no arguments', () => {
-        testShared.assertThrows(
-          testShared.bind(child.put, child),
-          'storage/invalid-argument-count'
-        );
-      });
       it('throws on number instead of metadata', () => {
         testShared.assertThrows(
-          testShared.bind(child.put, child, new Blob([]), 3),
+          testShared.bind(uploadBytes, child, new Blob([]), 3),
           'storage/invalid-argument'
         );
       });
       it('throws on number instead of data', () => {
         testShared.assertThrows(
-          testShared.bind(child.put, child, 3),
+          testShared.bind(uploadBytes, child, 3),
           'storage/invalid-argument'
         );
       });
-      it('throws null instead of data', () => {
+      it('throws on null instead of data', () => {
         testShared.assertThrows(
-          testShared.bind(child.put, child, null),
+          testShared.bind(uploadBytes, child, null),
           'storage/invalid-argument'
         );
       });
@@ -314,7 +291,7 @@ describe('Firebase Storage > Reference', () => {
           contentType: 'text/legit'
         };
         assert.doesNotThrow(() => {
-          const task = child.put(blob, goodMetadata as Metadata);
+          const task = uploadBytes(child, blob, goodMetadata as Metadata);
           task.cancel();
         });
       });
@@ -329,7 +306,7 @@ describe('Firebase Storage > Reference', () => {
           customMetadata: 'yo'
         };
         testShared.assertThrows(
-          testShared.bind(child.put, child, blob, badCustomMetadata),
+          testShared.bind(uploadBytes, child, blob, badCustomMetadata),
           'storage/invalid-argument'
         );
       });
@@ -344,7 +321,7 @@ describe('Firebase Storage > Reference', () => {
         };
         testShared.assertThrows(
           testShared.bind(
-            child.put,
+            uploadBytes,
             child,
             blob,
             objectInsteadOfStringInMetadata
@@ -354,56 +331,36 @@ describe('Firebase Storage > Reference', () => {
       });
     });
 
-    describe('putString', () => {
+    describe('uploadString', () => {
       it('throws on no arguments', () => {
         testShared.assertThrows(
-          testShared.bind(child.putString, child),
-          'storage/invalid-argument-count'
+          testShared.bind(uploadString, child, child),
+          'storage/invalid-argument'
         );
       });
       it('throws on invalid format', () => {
         testShared.assertThrows(
-          testShared.bind(child.putString, child, 'raw', 'notaformat'),
+          testShared.bind(uploadString, child, child, 'raw', 'notaformat'),
           'storage/invalid-argument'
         );
       });
       it('throws on number instead of string', () => {
         testShared.assertThrows(
-          testShared.bind(child.putString, child, 3, StringFormat.RAW),
+          testShared.bind(uploadString, child, child, 3, StringFormat.RAW),
           'storage/invalid-argument'
         );
       });
       it('throws on invalid metadata', () => {
         testShared.assertThrows(
-          testShared.bind(child.putString, child, 'raw', StringFormat.RAW, 3),
+          testShared.bind(
+            uploadString,
+            child,
+            child,
+            'raw',
+            StringFormat.RAW,
+            3
+          ),
           'storage/invalid-argument'
-        );
-      });
-    });
-
-    describe('delete', () => {
-      it('throws on a number arg', () => {
-        testShared.assertThrows(
-          testShared.bind(child.delete, child, 3),
-          'storage/invalid-argument-count'
-        );
-      });
-    });
-
-    describe('getMetadata', () => {
-      it('throws on a number arg', () => {
-        testShared.assertThrows(
-          testShared.bind(child.getMetadata, child, 3),
-          'storage/invalid-argument-count'
-        );
-      });
-    });
-
-    describe('listAll', () => {
-      it('throws on number arg', () => {
-        testShared.assertThrows(
-          testShared.bind(child.listAll, child, 1),
-          'storage/invalid-argument-count'
         );
       });
     });
@@ -411,49 +368,49 @@ describe('Firebase Storage > Reference', () => {
     describe('list', () => {
       it('throws on invalid option', () => {
         testShared.assertThrows(
-          testShared.bind(child.list, child, 'invalid-option'),
+          testShared.bind(list, child, child, 'invalid-option'),
           'storage/invalid-argument'
         );
       });
       it('throws on number arg', () => {
         testShared.assertThrows(
-          testShared.bind(child.list, child, 1, 2),
-          'storage/invalid-argument-count'
+          testShared.bind(list, child, child, 1, 2),
+          'storage/invalid-argument'
         );
       });
       it('throws on non-string pageToken', () => {
         testShared.assertThrows(
-          testShared.bind(child.list, child, { pageToken: { x: 1 } }),
+          testShared.bind(list, child, child, { pageToken: { x: 1 } }),
           'storage/invalid-argument'
         );
       });
       it('throws on non-int maxResults', () => {
         testShared.assertThrows(
-          testShared.bind(child.list, child, { maxResults: '4' }),
+          testShared.bind(list, child, child, { maxResults: '4' }),
           'storage/invalid-argument'
         );
         testShared.assertThrows(
-          testShared.bind(child.list, child, { maxResults: 1.2 }),
+          testShared.bind(list, child, child, { maxResults: 1.2 }),
           'storage/invalid-argument'
         );
       });
       it('throws on invalid maxResults', () => {
         testShared.assertThrows(
-          testShared.bind(child.list, child, { maxResults: 0 }),
+          testShared.bind(list, child, child, { maxResults: 0 }),
           'storage/invalid-argument'
         );
         testShared.assertThrows(
-          testShared.bind(child.list, child, { maxResults: -4 }),
+          testShared.bind(list, child, child, { maxResults: -4 }),
           'storage/invalid-argument'
         );
         testShared.assertThrows(
-          testShared.bind(child.list, child, { maxResults: 1001 }),
+          testShared.bind(list, child, child, { maxResults: 1001 }),
           'storage/invalid-argument'
         );
       });
-      it('throws on unkonw option', () => {
+      it('throws on unknown option', () => {
         testShared.assertThrows(
-          testShared.bind(child.list, child, { unknown: 'ok' }),
+          testShared.bind(list, child, child, { unknown: 'ok' }),
           'storage/invalid-argument'
         );
       });
@@ -462,29 +419,20 @@ describe('Firebase Storage > Reference', () => {
     describe('updateMetadata', () => {
       it('throws on no args', () => {
         testShared.assertThrows(
-          testShared.bind(child.updateMetadata, child),
-          'storage/invalid-argument-count'
+          testShared.bind(updateMetadata, child, child),
+          'storage/invalid-argument'
         );
       });
       it('throws on number arg', () => {
         testShared.assertThrows(
-          testShared.bind(child.updateMetadata, child, 3),
+          testShared.bind(updateMetadata, child, child, 3),
           'storage/invalid-argument'
         );
       });
       it('throws on null arg', () => {
         testShared.assertThrows(
-          testShared.bind(child.updateMetadata, child, null),
+          testShared.bind(updateMetadata, child, child, null),
           'storage/invalid-argument'
-        );
-      });
-    });
-
-    describe('getDownloadURL', () => {
-      it('throws on number arg', () => {
-        testShared.assertThrows(
-          testShared.bind(child.getDownloadURL, child, 3),
-          'storage/invalid-argument-count'
         );
       });
     });
@@ -493,17 +441,18 @@ describe('Firebase Storage > Reference', () => {
   describe('non-root operations', () => {
     it("put doesn't throw", () => {
       assert.doesNotThrow(() => {
-        child.put(new Blob(['a']));
-        child.put(new Uint8Array(10));
-        child.put(new ArrayBuffer(10));
+        uploadBytes(child, new Blob(['a']));
+        uploadBytes(child, new Uint8Array(10));
+        uploadBytes(child, new ArrayBuffer(10));
       });
     });
-    it("putString doesn't throw", () => {
+    it("uploadString doesn't throw", () => {
       assert.doesNotThrow(() => {
-        child.putString('raw', StringFormat.RAW);
-        child.putString('aaaa', StringFormat.BASE64);
-        child.putString('aaaa', StringFormat.BASE64URL);
-        child.putString(
+        uploadString(child, 'raw', StringFormat.RAW);
+        uploadString(child, 'aaaa', StringFormat.BASE64);
+        uploadString(child, 'aaaa', StringFormat.BASE64URL);
+        uploadString(
+          child,
           'data:application/octet-stream;base64,aaaa',
           StringFormat.DATA_URL
         );
@@ -511,96 +460,95 @@ describe('Firebase Storage > Reference', () => {
     });
     it("delete doesn't throw", () => {
       assert.doesNotThrow(() => {
-        child.delete();
+        deleteObject(child);
       });
     });
     it("getMetadata doesn't throw", () => {
       assert.doesNotThrow(() => {
-        child.getMetadata();
+        getMetadata(child);
       });
     });
     it("listAll doesn't throw", () => {
       assert.doesNotThrow(() => {
-        child.listAll();
+        listAll(child);
       });
     });
     it("list doesn't throw", () => {
       assert.doesNotThrow(() => {
-        child.list();
+        list(child);
       });
       assert.doesNotThrow(() => {
-        child.list({ pageToken: 'xxx', maxResults: 4 });
+        list(child, { pageToken: 'xxx', maxResults: 4 });
       });
       assert.doesNotThrow(() => {
-        child.list({ pageToken: 'xxx' });
+        list(child, { pageToken: 'xxx' });
       });
       assert.doesNotThrow(() => {
-        child.list({ maxResults: 4 });
+        list(child, { maxResults: 4 });
       });
       assert.doesNotThrow(() => {
-        child.list({ maxResults: 4, pageToken: null });
+        list(child, { maxResults: 4, pageToken: null });
       });
     });
     it("updateMetadata doesn't throw", () => {
       assert.doesNotThrow(() => {
-        child.updateMetadata({} as Metadata);
+        updateMetadata(child, {} as Metadata);
       });
     });
     it("getDownloadURL doesn't throw", () => {
       assert.doesNotThrow(() => {
-        child.getDownloadURL();
+        getDownloadURL(child);
       });
     });
   });
 
   describe('root operations', () => {
-    it('put throws', () => {
+    it('uploadBytes throws', () => {
       testShared.assertThrows(
-        root.put.bind(root, new Blob(['a'])),
+        uploadBytes.bind(root, root, new Blob(['a'])),
         'storage/invalid-root-operation'
       );
     });
-    it('putString throws', () => {
+    it('uploadString throws', () => {
       testShared.assertThrows(
-        root.putString.bind(root, 'raw', StringFormat.RAW),
+        uploadString.bind(root, root, 'raw', StringFormat.RAW),
         'storage/invalid-root-operation'
       );
     });
-    it('delete throws', () => {
+    it('deleteObject throws', () => {
       testShared.assertThrows(
-        root.delete.bind(root),
+        deleteObject.bind(root, root),
         'storage/invalid-root-operation'
       );
     });
     it('getMetadata throws', () => {
       testShared.assertThrows(
-        root.getMetadata.bind(root),
+        getMetadata.bind(root, root),
         'storage/invalid-root-operation'
       );
     });
     it("listAll doesn't throw", () => {
       assert.doesNotThrow(() => {
-        root.listAll();
+        listAll(root);
       });
     });
     it("list doesn't throw", () => {
       assert.doesNotThrow(() => {
-        root.list();
+        list(root);
       });
       assert.doesNotThrow(() => {
-        root.list({ pageToken: 'xxx', maxResults: 4 });
+        list(root, { pageToken: 'xxx', maxResults: 4 });
       });
     });
     it('updateMetadata throws', () => {
       testShared.assertThrows(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (root as any).updateMetadata.bind(root, {}),
+        updateMetadata.bind(root, root, {} as Metadata),
         'storage/invalid-root-operation'
       );
     });
     it('getDownloadURL throws', () => {
       testShared.assertThrows(
-        root.getDownloadURL.bind(root),
+        getDownloadURL.bind(root, root),
         'storage/invalid-root-operation'
       );
     });

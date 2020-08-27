@@ -39,8 +39,7 @@ export {
   list,
   listAll,
   getDownloadURL,
-  deleteObject,
-  getParent as parentReference
+  deleteObject
 } from '../src/reference';
 
 /**

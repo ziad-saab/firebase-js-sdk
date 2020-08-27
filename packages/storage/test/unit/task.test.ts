@@ -17,7 +17,6 @@
 import { assert } from 'chai';
 import { FbsBlob } from '../../src/implementation/blob';
 import { Location } from '../../src/implementation/location';
-import { getMappings } from '../../src/implementation/metadata';
 import { Unsubscribe } from '../../src/implementation/observer';
 import { TaskEvent, TaskState } from '../../src/implementation/taskenums';
 import { Headers } from '../../src/implementation/xhrio';
@@ -36,8 +35,6 @@ import { FirebaseApp } from '@firebase/app-types';
 const testLocation = new Location('bucket', 'object');
 const smallBlob = new FbsBlob(new Blob(['a']));
 const bigBlob = new FbsBlob(new Blob([new ArrayBuffer(1024 * 1024)]));
-
-const mappings = getMappings();
 
 const fakeMetadata = '{ "downloadTokens": "a,b" }';
 
@@ -201,10 +198,7 @@ describe('Firebase Storage > Upload Task', () => {
   it('Works for a small upload w/ an observer', done => {
     const storageService = storageServiceWithHandler(fakeServerHandler());
     const task = new UploadTask(
-      {} as Reference,
-      storageService,
-      testLocation,
-      mappings,
+      new Reference(storageService, testLocation),
       smallBlob
     );
     task.on(
@@ -217,10 +211,7 @@ describe('Firebase Storage > Upload Task', () => {
   it('Works for a small upload w/ a promise', () => {
     const storageService = storageServiceWithHandler(fakeServerHandler());
     const task = new UploadTask(
-      {} as Reference,
-      storageService,
-      testLocation,
-      mappings,
+      new Reference(storageService, testLocation),
       smallBlob
     );
     return task.then(snapshot => {
@@ -230,10 +221,7 @@ describe('Firebase Storage > Upload Task', () => {
   it('Works for a small upload canceled w/ a promise', () => {
     const storageService = storageServiceWithHandler(fakeServerHandler());
     const task = new UploadTask(
-      {} as Reference,
-      storageService,
-      testLocation,
-      mappings,
+      new Reference(storageService, testLocation),
       smallBlob
     );
     const promise: Promise<string | null> = task.then<string | null>(
@@ -249,10 +237,7 @@ describe('Firebase Storage > Upload Task', () => {
   it('Works properly with multiple observers', () => {
     const storageService = storageServiceWithHandler(fakeServerHandler());
     const task = new UploadTask(
-      {} as Reference,
-      storageService,
-      testLocation,
-      mappings,
+      new Reference(storageService, testLocation),
       smallBlob
     );
 
@@ -305,10 +290,7 @@ describe('Firebase Storage > Upload Task', () => {
   it("Works properly with an observer missing the 'next' method", () => {
     const storageService = storageServiceWithHandler(fakeServerHandler());
     const task = new UploadTask(
-      {} as Reference,
-      storageService,
-      testLocation,
-      mappings,
+      new Reference(storageService, testLocation),
       smallBlob
     );
     return new Promise(resolve => {
@@ -326,10 +308,7 @@ describe('Firebase Storage > Upload Task', () => {
   function runNormalUploadTest(blob: FbsBlob): Promise<void> {
     const storageService = storageServiceWithHandler(fakeServerHandler());
     const task = new UploadTask(
-      {} as Reference,
-      storageService,
-      testLocation,
-      mappings,
+      new Reference(storageService, testLocation),
       blob
     );
 
@@ -448,10 +427,7 @@ describe('Firebase Storage > Upload Task', () => {
       fixedAssertTrue(lastIsAll);
 
       const task2 = new UploadTask(
-        {} as Reference,
-        storageService,
-        testLocation,
-        mappings,
+        new Reference(storageService, testLocation),
         blob
       );
       const events2: string[] = [];
@@ -505,10 +481,7 @@ describe('Firebase Storage > Upload Task', () => {
   describe('Argument verification', () => {
     const storageService = storageServiceWithHandler(fakeServerHandler());
     const task = new UploadTask(
-      {} as Reference,
-      storageService,
-      testLocation,
-      mappings,
+      new Reference(storageService, testLocation),
       smallBlob
     );
     describe('on', () => {

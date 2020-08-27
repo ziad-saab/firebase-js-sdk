@@ -107,6 +107,10 @@ export class Reference {
     return this.service;
   }
 
+  get parent(): Reference | null {
+    return getParent(this);
+  }
+
   throwIfRoot_(name: string): void {
     if (this.location.path === '') {
       throw errorsExports.invalidRootOperation(name);
