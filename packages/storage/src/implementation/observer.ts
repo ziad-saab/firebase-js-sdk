@@ -18,7 +18,7 @@ import * as type from './type';
 import { FirebaseStorageError } from './error';
 
 export type NextFn<T> = (value: T) => void;
-export type ErrorFn = (error: Error | FirebaseStorageError) => void;
+export type ErrorFn = (error: FirebaseStorageError) => void;
 export type CompleteFn = () => void;
 export type Unsubscribe = () => void;
 

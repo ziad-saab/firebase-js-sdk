@@ -67,14 +67,14 @@ export class UploadTask {
   private observers_: Array<StorageObserver<UploadTaskSnapshot>> = [];
   private resumable_: boolean;
   state_: InternalTaskState;
-  private error_: Error | null = null;
+  private error_: FirebaseStorageError | null = null;
   private uploadUrl_: string | null = null;
   private request_: Request<unknown> | null = null;
   private chunkMultiplier_: number = 1;
   private errorHandler_: (p1: FirebaseStorageError) => void;
   private metadataErrorHandler_: (p1: FirebaseStorageError) => void;
   private resolve_: ((p1: UploadTaskSnapshot) => void) | null = null;
-  private reject_: ((p1: Error) => void) | null = null;
+  private reject_: ((p1: FirebaseStorageError) => void) | null = null;
   private promise_: Promise<UploadTaskSnapshot>;
 
   /**
@@ -599,8 +599,8 @@ export class UploadTask {
           break;
         case TaskState.CANCELED:
         case TaskState.ERROR:
-          const toCall = this.reject_ as (p1: Error) => void;
-          fbsAsync(toCall.bind(null, this.error_ as Error))();
+          const toCall = this.reject_ as (p1: FirebaseStorageError) => void;
+          fbsAsync(toCall.bind(null, this.error_ as FirebaseStorageError))();
           break;
         default:
           triggered = false;
@@ -630,13 +630,17 @@ export class UploadTask {
       case TaskState.CANCELED:
       case TaskState.ERROR:
         if (observer.error) {
-          fbsAsync(observer.error.bind(observer, this.error_ as Error))();
+          fbsAsync(
+            observer.error.bind(observer, this.error_ as FirebaseStorageError)
+          )();
         }
         break;
       default:
         // TODO(andysoto): assert(false);
         if (observer.error) {
-          fbsAsync(observer.error.bind(observer, this.error_ as Error))();
+          fbsAsync(
+            observer.error.bind(observer, this.error_ as FirebaseStorageError)
+          )();
         }
     }
   }

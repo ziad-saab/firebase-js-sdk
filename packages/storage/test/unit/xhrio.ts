@@ -16,6 +16,7 @@
  */
 import * as type from '../../src/implementation/type';
 import { ErrorCode, Headers, XhrIo } from '../../src/implementation/xhrio';
+import { FirebaseStorageError, Code } from '../../src/implementation/error';
 
 export type SendHook = (
   xhrio: TestingXhrIo,
@@ -64,7 +65,8 @@ export class TestingXhrIo implements XhrIo {
     headers?: Headers
   ): Promise<XhrIo> {
     if (this.state !== State.START) {
-      throw new Error("Can't send again");
+      //TODO: Make a code.
+      throw new FirebaseStorageError(Code.UNKNOWN, "Can't send again");
     }
 
     this.state = State.SENT;
@@ -81,7 +83,11 @@ export class TestingXhrIo implements XhrIo {
     headers: { [key: string]: string }
   ): void {
     if (this.state !== State.SENT) {
-      throw new Error("Can't simulate response before send/more than once");
+      //TODO: Make a code.
+      throw new FirebaseStorageError(
+        Code.UNKNOWN,
+        "Can't simulate response before send/more than once"
+      );
     }
 
     this.status = status;

@@ -18,11 +18,17 @@
 import { UploadTask } from '../src/task';
 import { UploadTaskSnapshotCompat } from './tasksnapshot';
 import { TaskEvent } from '../src/implementation/taskenums';
-import { ErrorFn, CompleteFn, Unsubscribe, Subscribe } from '@firebase/util';
 import * as types from '@firebase/storage-types';
-import { StorageObserver } from '../src/implementation/observer';
+import {
+  StorageObserver,
+  ErrorFn,
+  CompleteFn,
+  Subscribe,
+  Unsubscribe
+} from '../src/implementation/observer';
 import { UploadTaskSnapshot } from '../src/tasksnapshot';
 import { ReferenceCompat } from './reference';
+import { FirebaseStorageError } from '../src/implementation/error';
 
 export class UploadTaskCompat implements types.UploadTask {
   constructor(
@@ -43,7 +49,7 @@ export class UploadTaskCompat implements types.UploadTask {
 
   then(
     onFulfilled?: ((a: UploadTaskSnapshotCompat) => unknown) | null,
-    onRejected?: ((a: Error) => unknown) | null
+    onRejected?: ((a: FirebaseStorageError) => unknown) | null
   ): Promise<unknown> {
     return this.delegate.then(snapshot => {
       if (onFulfilled) {

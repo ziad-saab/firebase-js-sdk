@@ -97,7 +97,8 @@ export const Code = {
   APP_DELETED: 'app-deleted',
   INVALID_ROOT_OPERATION: 'invalid-root-operation',
   INVALID_FORMAT: 'invalid-format',
-  INTERNAL_ERROR: 'internal-error'
+  INTERNAL_ERROR: 'internal-error',
+  UNSUPPORTED_ENVIRONMENT: 'unsupported-environment'
 };
 
 export function prependCode(code: Code): string {
