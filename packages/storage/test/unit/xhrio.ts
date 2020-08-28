@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as type from '../../src/implementation/type';
 import { ErrorCode, Headers, XhrIo } from '../../src/implementation/xhrio';
 import { FirebaseStorageError, Code } from '../../src/implementation/error';
 

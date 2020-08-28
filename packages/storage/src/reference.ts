@@ -28,7 +28,6 @@ import {
   formatValidator,
   dataFromString
 } from './implementation/string';
-import * as type from './implementation/type';
 import { Metadata } from './metadata';
 import { StorageService } from './service';
 import { ListOptions, ListResult } from './list';
