@@ -64,7 +64,6 @@ export class TestingXhrIo implements XhrIo {
     headers?: Headers
   ): Promise<XhrIo> {
     if (this.state !== State.START) {
-      //TODO: Make a code.
       throw new FirebaseStorageError(Code.UNKNOWN, "Can't send again");
     }
 
@@ -82,7 +81,6 @@ export class TestingXhrIo implements XhrIo {
     headers: { [key: string]: string }
   ): void {
     if (this.state !== State.SENT) {
-      //TODO: Make a code.
       throw new FirebaseStorageError(
         Code.UNKNOWN,
         "Can't simulate response before send/more than once"

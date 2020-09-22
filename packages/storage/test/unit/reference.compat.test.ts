@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2017 Google LLC
+ * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,13 +42,11 @@ function makeFakeService(
 }
 
 function makeStorage(url: string): ReferenceCompat {
-  console.log('makeStorage');
   const service = new StorageService(
     {} as FirebaseApp,
     testShared.emptyAuthProvider,
     testShared.makePool(null)
   );
-  console.log('created service');
   return new ReferenceCompat(new Reference(service, url));
 }
 
