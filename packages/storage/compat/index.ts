@@ -49,7 +49,7 @@ function factory(
   return new StorageServiceCompat(
     new StorageService(app, authProvider, new XhrIoPool(), url),
     ref => new ReferenceCompat(ref)
-  ) as types.FirebaseStorage;
+  );
 }
 
 export function registerStorage(instance: _FirebaseNamespace): void {

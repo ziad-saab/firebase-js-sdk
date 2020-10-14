@@ -103,7 +103,7 @@ export class Reference {
     return getParent(this);
   }
 
-  throwIfRoot_(name: string): void {
+  _throwIfRoot(name: string): void {
     if (this.location.path === '') {
       throw invalidRootOperation(name);
     }
@@ -128,7 +128,7 @@ export function uploadBytes(
   if (metadata != null) {
     metadataValidator(metadata);
   }
-  ref.throwIfRoot_('uploadBytes');
+  ref._throwIfRoot('uploadBytes');
   return new UploadTask(ref, new FbsBlob(data), metadata);
 }
 
@@ -159,7 +159,7 @@ export function uploadString(
   if (metadata != null) {
     metadataValidator(metadata);
   }
-  ref.throwIfRoot_('putString');
+  ref._throwIfRoot('putString');
   const data = dataFromString(format, value);
   const metadataClone = { ...metadata } as Metadata;
   if (metadataClone['contentType'] == null && data.contentType != null) {
@@ -270,7 +270,7 @@ export function list(
  * @param ref - Storage Reference to get metadata from.
  */
 export function getMetadata(ref: Reference): Promise<Metadata> {
-  ref.throwIfRoot_('getMetadata');
+  ref._throwIfRoot('getMetadata');
   return ref.service.getAuthToken().then(authToken => {
     const requestInfo = requests.getMetadata(
       ref.service,
@@ -297,7 +297,7 @@ export function updateMetadata(
   metadata: Metadata
 ): Promise<Metadata> {
   metadataValidator(metadata);
-  ref.throwIfRoot_('updateMetadata');
+  ref._throwIfRoot('updateMetadata');
   return ref.service.getAuthToken().then(authToken => {
     const requestInfo = requests.updateMetadata(
       ref.service,
@@ -315,7 +315,7 @@ export function updateMetadata(
  *     URL for this object.
  */
 export function getDownloadURL(ref: Reference): Promise<string> {
-  ref.throwIfRoot_('getDownloadURL');
+  ref._throwIfRoot('getDownloadURL');
   return ref.service.getAuthToken().then(authToken => {
     const requestInfo = requests.getDownloadUrl(
       ref.service,
@@ -341,7 +341,7 @@ export function getDownloadURL(ref: Reference): Promise<string> {
  * @returns A promise that resolves if the deletion succeeds.
  */
 export function deleteObject(ref: Reference): Promise<void> {
-  ref.throwIfRoot_('deleteObject');
+  ref._throwIfRoot('deleteObject');
   return ref.service.getAuthToken().then(authToken => {
     const requestInfo = requests.deleteObject(ref.service, ref.location);
     return ref.service.makeRequest(requestInfo, authToken).getPromise();
