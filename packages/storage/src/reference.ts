@@ -20,24 +20,27 @@
  */
 import { FbsBlob } from './implementation/blob';
 import { Location } from './implementation/location';
-import { metadataValidator, getMappings } from './implementation/metadata';
-import * as path from './implementation/path';
-import * as requests from './implementation/requests';
+import { getMappings } from './implementation/metadata';
+import { child, parent, lastComponent } from './implementation/path';
 import {
-  StringFormat,
-  formatValidator,
-  dataFromString
-} from './implementation/string';
+  list as requestsList,
+  getMetadata as requestsGetMetadata,
+  updateMetadata as requestsUpdateMetadata,
+  getDownloadUrl as requestsGetDownloadUrl,
+  deleteObject as requestsDeleteObject
+} from './implementation/requests';
+import { StringFormat, dataFromString } from './implementation/string';
 import { Metadata } from './metadata';
 import { StorageService } from './service';
 import { ListOptions, ListResult } from './list';
-import { uploadDataSpec, listOptionSpec } from './implementation/args';
 import { UploadTask } from './task';
 import {
   invalidArgument,
   invalidRootOperation,
   noDownloadURL
 } from './implementation/error';
+
+const MAX_MAX_RESULTS = 1000;
 
 /**
  * Provides methods to interact with a bucket in the Firebase Storage service.
@@ -51,9 +54,17 @@ import {
  *     the project ID of the base firebase.App instance.
  */
 export class Reference {
+  /**
+   * @internal
+   */
   location: Location;
+  /**
+   * @internal
+   */
+  service: StorageService;
 
-  constructor(public service: StorageService, location: string | Location) {
+  constructor(service: StorageService, location: string | Location) {
+    this.service = service;
     if (location instanceof Location) {
       this.location = location;
     } else {
@@ -92,7 +103,7 @@ export class Reference {
   }
 
   get name(): string {
-    return path.lastComponent(this.location.path);
+    return lastComponent(this.location.path);
   }
 
   get storage(): StorageService {
@@ -124,10 +135,6 @@ export function uploadBytes(
   data: Blob | Uint8Array | ArrayBuffer,
   metadata: Metadata | null = null
 ): UploadTask {
-  uploadDataSpec().validator(data);
-  if (metadata != null) {
-    metadataValidator(metadata);
-  }
   ref._throwIfRoot('uploadBytes');
   return new UploadTask(ref, new FbsBlob(data), metadata);
 }
@@ -154,10 +161,6 @@ export function uploadString(
       'uploadString',
       'Must provide a string to upload.'
     );
-  }
-  formatValidator(format);
-  if (metadata != null) {
-    metadataValidator(metadata);
   }
   ref._throwIfRoot('putString');
   const data = dataFromString(format, value);
@@ -190,8 +193,7 @@ export function uploadString(
 export function listAll(ref: Reference): Promise<ListResult> {
   const accumulator: ListResult = {
     prefixes: [],
-    items: [],
-    nextPageToken: null
+    items: []
   };
   return listAllHelper(ref, accumulator).then(() => accumulator);
 }
@@ -242,24 +244,34 @@ async function listAllHelper(
  *      contains references to objects in this folder. `nextPageToken`
  *      can be used to get the rest of the results.
  */
-export function list(
+export async function list(
   ref: Reference,
   options?: ListOptions | null
 ): Promise<ListResult> {
   if (options != null) {
-    listOptionSpec().validator(options);
+    if (options.maxResults != null) {
+      if (options.maxResults <= 0) {
+        throw invalidArgument(
+          'Expected options.maxResults to be a positive number.'
+        );
+      }
+      if (options.maxResults > MAX_MAX_RESULTS) {
+        throw invalidArgument(
+          `Expected options.maxResults to be less than or equal to ${MAX_MAX_RESULTS}.`
+        );
+      }
+    }
   }
-  return ref.service.getAuthToken().then(authToken => {
-    const op = options || {};
-    const requestInfo = requests.list(
-      ref.service,
-      ref.location,
-      /*delimiter= */ '/',
-      op.pageToken,
-      op.maxResults
-    );
-    return ref.service.makeRequest(requestInfo, authToken).getPromise();
-  });
+  const authToken = await ref.service.getAuthToken();
+  const op = options || {};
+  const requestInfo = requestsList(
+    ref.service,
+    ref.location,
+    /*delimiter= */ '/',
+    op.pageToken,
+    op.maxResults
+  );
+  return ref.service.makeRequest(requestInfo, authToken).getPromise();
 }
 
 /**
@@ -269,16 +281,15 @@ export function list(
  * @public
  * @param ref - Storage Reference to get metadata from.
  */
-export function getMetadata(ref: Reference): Promise<Metadata> {
+export async function getMetadata(ref: Reference): Promise<Metadata> {
   ref._throwIfRoot('getMetadata');
-  return ref.service.getAuthToken().then(authToken => {
-    const requestInfo = requests.getMetadata(
-      ref.service,
-      ref.location,
-      getMappings()
-    );
-    return ref.service.makeRequest(requestInfo, authToken).getPromise();
-  });
+  const authToken = await ref.service.getAuthToken();
+  const requestInfo = requestsGetMetadata(
+    ref.service,
+    ref.location,
+    getMappings()
+  );
+  return ref.service.makeRequest(requestInfo, authToken).getPromise();
 }
 
 /**
@@ -292,21 +303,19 @@ export function getMetadata(ref: Reference): Promise<Metadata> {
  *     with the new metadata for this object.
  *     @see firebaseStorage.Reference.prototype.getMetadata
  */
-export function updateMetadata(
+export async function updateMetadata(
   ref: Reference,
   metadata: Metadata
 ): Promise<Metadata> {
-  metadataValidator(metadata);
   ref._throwIfRoot('updateMetadata');
-  return ref.service.getAuthToken().then(authToken => {
-    const requestInfo = requests.updateMetadata(
-      ref.service,
-      ref.location,
-      metadata,
-      getMappings()
-    );
-    return ref.service.makeRequest(requestInfo, authToken).getPromise();
-  });
+  const authToken = await ref.service.getAuthToken();
+  const requestInfo = requestsUpdateMetadata(
+    ref.service,
+    ref.location,
+    metadata,
+    getMappings()
+  );
+  return ref.service.makeRequest(requestInfo, authToken).getPromise();
 }
 
 /**
@@ -314,24 +323,23 @@ export function updateMetadata(
  * @returns A promise that resolves with the download
  *     URL for this object.
  */
-export function getDownloadURL(ref: Reference): Promise<string> {
+export async function getDownloadURL(ref: Reference): Promise<string> {
   ref._throwIfRoot('getDownloadURL');
-  return ref.service.getAuthToken().then(authToken => {
-    const requestInfo = requests.getDownloadUrl(
-      ref.service,
-      ref.location,
-      getMappings()
-    );
-    return ref.service
-      .makeRequest(requestInfo, authToken)
-      .getPromise()
-      .then(url => {
-        if (url === null) {
-          throw noDownloadURL();
-        }
-        return url;
-      });
-  });
+  const authToken = await ref.service.getAuthToken();
+  const requestInfo = requestsGetDownloadUrl(
+    ref.service,
+    ref.location,
+    getMappings()
+  );
+  return ref.service
+    .makeRequest(requestInfo, authToken)
+    .getPromise()
+    .then(url => {
+      if (url === null) {
+        throw noDownloadURL();
+      }
+      return url;
+    });
 }
 
 /**
@@ -340,12 +348,11 @@ export function getDownloadURL(ref: Reference): Promise<string> {
  * @param ref - Storage Reference for object to delete.
  * @returns A promise that resolves if the deletion succeeds.
  */
-export function deleteObject(ref: Reference): Promise<void> {
+export async function deleteObject(ref: Reference): Promise<void> {
   ref._throwIfRoot('deleteObject');
-  return ref.service.getAuthToken().then(authToken => {
-    const requestInfo = requests.deleteObject(ref.service, ref.location);
-    return ref.service.makeRequest(requestInfo, authToken).getPromise();
-  });
+  const authToken = await ref.service.getAuthToken();
+  const requestInfo = requestsDeleteObject(ref.service, ref.location);
+  return ref.service.makeRequest(requestInfo, authToken).getPromise();
 }
 
 /**
@@ -359,7 +366,7 @@ export function deleteObject(ref: Reference): Promise<void> {
  * slashes.
  */
 export function getChild(ref: Reference, childPath: string): Reference {
-  const newPath = path.child(ref.location.path, childPath);
+  const newPath = child(ref.location.path, childPath);
   const location = new Location(ref.location.bucket, newPath);
   return new Reference(ref.service, location);
 }
@@ -370,7 +377,7 @@ export function getChild(ref: Reference, childPath: string): Reference {
  * current object, or null if the current object is the root.
  */
 export function getParent(ref: Reference): Reference | null {
-  const newPath = path.parent(ref.location.path);
+  const newPath = parent(ref.location.path);
   if (newPath === null) {
     return null;
   }

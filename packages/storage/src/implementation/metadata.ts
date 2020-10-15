@@ -27,7 +27,6 @@ import * as type from './type';
 import * as UrlUtils from './url';
 import { Reference } from '../reference';
 import { StorageService } from '../service';
-import { invalidArgument } from './error';
 
 export function noXform_<T>(metadata: Metadata, value: T): T {
   return value;
@@ -88,9 +87,9 @@ export function getMappings(): Mappings {
    */
   function xformSize(
     _metadata: Metadata,
-    size: number | string | undefined
+    size?: number | string
   ): number | undefined {
-    if (size != null) {
+    if (size !== undefined) {
       return Number(size);
     } else {
       return size;
@@ -202,33 +201,4 @@ export function toResourceString(
     }
   }
   return JSON.stringify(resource);
-}
-
-export function metadataValidator(p: unknown): void {
-  if (!type.isObject(p) || !p) {
-    throw invalidArgument('Expected Metadata object.');
-  }
-  for (const key in p) {
-    if (p.hasOwnProperty(key)) {
-      const val = p[key];
-      const metadataErrorPrefix = 'Incorrect format for metadata: ';
-      if (key === 'customMetadata') {
-        if (!type.isObject(val)) {
-          throw invalidArgument(
-            metadataErrorPrefix +
-              "Expected object for 'customMetadata' mapping."
-          );
-        }
-      } else {
-        if (type.isNonNullObject(val)) {
-          throw invalidArgument(
-            metadataErrorPrefix +
-              "Mapping for '" +
-              key +
-              "' cannot be an object."
-          );
-        }
-      }
-    }
-  }
 }

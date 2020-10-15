@@ -51,7 +51,7 @@ export class NetworkXhrIo implements XhrIo {
   send(
     url: string,
     method: string,
-    body?: ArrayBufferView | Blob | string | null,
+    body?: ArrayBufferView | Blob | string,
     headers?: Headers
   ): Promise<XhrIo> {
     if (this.sent_) {
@@ -59,14 +59,14 @@ export class NetworkXhrIo implements XhrIo {
     }
     this.sent_ = true;
     this.xhr_.open(method, url, true);
-    if (headers != null) {
+    if (headers !== undefined) {
       for (const key in headers) {
         if (headers.hasOwnProperty(key)) {
           this.xhr_.setRequestHeader(key, headers[key].toString());
         }
       }
     }
-    if (body != null) {
+    if (body !== undefined) {
       this.xhr_.send(body);
     } else {
       this.xhr_.send();

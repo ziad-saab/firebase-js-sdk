@@ -22,11 +22,11 @@ import { Reference } from '../src/reference';
 
 export class ListResultCompat implements types.ListResult {
   constructor(
-    private readonly delegate: ListResult,
-    private converter: (ref: Reference) => ReferenceCompat
+    private readonly _delegate: ListResult,
+    private _referenceConverter: (ref: Reference) => ReferenceCompat
   ) {}
 
-  prefixes = this.delegate.prefixes.map(v => this.converter(v));
-  items = this.delegate.items.map(v => this.converter(v));
-  nextPageToken = this.delegate.nextPageToken;
+  prefixes = this._delegate.prefixes.map(v => this._referenceConverter(v));
+  items = this._delegate.items.map(v => this._referenceConverter(v));
+  nextPageToken = this._delegate.nextPageToken || null;
 }

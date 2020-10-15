@@ -22,14 +22,13 @@ import { UploadTaskSnapshot } from '../src/tasksnapshot';
 
 export class UploadTaskSnapshotCompat implements types.UploadTaskSnapshot {
   constructor(
-    readonly delegate: UploadTaskSnapshot,
-    public task: UploadTaskCompat,
-    public ref: ReferenceCompat
+    readonly _delegate: UploadTaskSnapshot,
+    readonly task: UploadTaskCompat,
+    readonly ref: ReferenceCompat
   ) {}
 
-  bytesTransferred = this.delegate.bytesTransferred;
-  metadata = this.delegate.metadata;
-  state = this.delegate.state;
-  // task = new UploadTaskCompat(this.delegate.task);
-  totalBytes = this.delegate.bytesTransferred;
+  bytesTransferred = this._delegate.bytesTransferred;
+  metadata = this._delegate.metadata;
+  state = this._delegate.state;
+  totalBytes = this._delegate.bytesTransferred;
 }

@@ -16,11 +16,8 @@
  */
 
 import { _registerComponent, registerVersion } from '@firebase/app-exp';
-import { StringFormat } from '../src/implementation/string';
-import { TaskEvent, TaskState } from '../src/implementation/taskenums';
 
 import { XhrIoPool } from '../src/implementation/xhriopool';
-import { Reference } from '../src/reference';
 import { StorageService } from '../src/service';
 import {
   Component,
@@ -49,7 +46,7 @@ const STORAGE_TYPE = 'storage-exp';
 
 function factory(container: ComponentContainer, url?: string): StorageService {
   // Dependencies
-  const app = container.getProvider('app').getImmediate();
+  const app = container.getProvider('app-exp').getImmediate();
   const authProvider = container.getProvider('auth-internal');
 
   return (new StorageService(
@@ -61,18 +58,12 @@ function factory(container: ComponentContainer, url?: string): StorageService {
 }
 
 export function registerStorage(): void {
-  const namespaceExports = {
-    // no-inline
-    TaskState,
-    TaskEvent,
-    StringFormat,
-    Storage: StorageService,
-    Reference
-  };
   _registerComponent(
-    new Component(STORAGE_TYPE, factory, ComponentType.PUBLIC)
-      .setServiceProps(namespaceExports)
-      .setMultipleInstances(true)
+    new Component(
+      STORAGE_TYPE,
+      factory,
+      ComponentType.PUBLIC
+    ).setMultipleInstances(true)
   );
 
   registerVersion(name, version);

@@ -18,32 +18,10 @@
 import * as types from '@firebase/storage-types';
 import { StorageService, isUrl, ref } from '../src/service';
 import { Location } from '../src/implementation/location';
-import * as args from '../src/implementation/args';
 import { ReferenceCompat } from './reference';
 import { Reference } from '../src/reference';
-
-export function urlValidator(maybeUrl: unknown): void {
-  if (typeof maybeUrl !== 'string') {
-    throw 'Path is not a string.';
-  }
-  if (!isUrl) {
-    throw 'Expected full URL but got a child path, use ref instead.';
-  }
-  try {
-    Location.makeFromUrl(maybeUrl as string);
-  } catch (e) {
-    throw 'Expected valid full URL but got an invalid one.';
-  }
-}
-
-export function pathValidator(path: unknown): void {
-  if (typeof path !== 'string') {
-    throw 'Path is not a string.';
-  }
-  if (isUrl(path)) {
-    throw 'Expected child path but got a URL, use refFromURL instead.';
-  }
-}
+import { invalidArgument } from '../src/implementation/error';
+import { FirebaseApp } from '@firebase/app-types';
 
 /**
  * A service that provides firebaseStorage.Reference instances.
@@ -51,22 +29,36 @@ export function pathValidator(path: unknown): void {
  */
 export class StorageServiceCompat implements types.FirebaseStorage {
   constructor(
-    readonly delegate: StorageService,
-    private converter: (ref: Reference) => ReferenceCompat
+    public app: FirebaseApp,
+    readonly _delegate: StorageService,
+    private _referenceConverter: (ref: Reference) => ReferenceCompat
   ) {}
 
-  app = this.delegate.app;
-  maxOperationRetryTime = this.delegate.maxOperationRetryTime;
-  maxUploadRetryTime = this.delegate.maxUploadRetryTime;
-  INTERNAL = new ServiceInternals(this);
+  maxOperationRetryTime = this._delegate.maxOperationRetryTime;
+  maxUploadRetryTime = this._delegate.maxUploadRetryTime;
+  /**
+   * @internal
+   */
+  INTERNAL = {
+    /**
+     * Called when the associated app is deleted.
+     */
+    delete: () => {
+      return this._delegate._delete();
+    }
+  };
 
   /**
    * Returns a firebaseStorage.Reference for the given path in the default
    * bucket.
    */
   ref(path?: string): types.Reference {
-    args.validate('ref', [args.stringSpec(pathValidator, true)], arguments);
-    return this.converter(ref(this.delegate, path));
+    if (isUrl(path)) {
+      throw invalidArgument(
+        'ref() expected a child path but got a URL, use refFromURL instead.'
+      );
+    }
+    return this._referenceConverter(ref(this._delegate, path));
   }
 
   /**
@@ -74,48 +66,36 @@ export class StorageServiceCompat implements types.FirebaseStorage {
    * which must be a gs:// or http[s]:// URL.
    */
   refFromURL(url: string): types.Reference {
-    args.validate(
-      'refFromURL',
-      [args.stringSpec(urlValidator, false)],
-      arguments
-    );
-    return this.converter(ref(this.delegate, url)) as types.Reference;
+    if (!isUrl(url)) {
+      throw invalidArgument(
+        'refFromURL() expected a full URL but got a child path, use ref() instead.'
+      );
+    }
+    try {
+      Location.makeFromUrl(url);
+    } catch (e) {
+      throw invalidArgument(
+        'refFromUrl() expected a valid full URL but got an invalid one.'
+      );
+    }
+    return this._referenceConverter(ref(this._delegate, url));
   }
 
   setMaxUploadRetryTime(time: number): void {
-    args.validate(
-      'setMaxUploadRetryTime',
-      [args.nonNegativeNumberSpec()],
-      arguments
-    );
-    this.delegate.maxUploadRetryTime = time;
+    if (time < 0) {
+      throw invalidArgument(
+        'Expected a non-negative argument for setMaxUploadRetryTime().'
+      );
+    }
+    this._delegate.maxUploadRetryTime = time;
   }
 
   setMaxOperationRetryTime(time: number): void {
-    args.validate(
-      'setMaxOperationRetryTime',
-      [args.nonNegativeNumberSpec()],
-      arguments
-    );
-    this.delegate.maxOperationRetryTime = time;
-  }
-}
-
-/**
- * @internal
- */
-export class ServiceInternals {
-  _service: StorageServiceCompat;
-
-  constructor(service: StorageServiceCompat) {
-    this._service = service;
-  }
-
-  /**
-   * Called when the associated app is deleted.
-   */
-  delete(): Promise<void> {
-    this._service.delegate.deleteApp();
-    return Promise.resolve();
+    if (time < 0) {
+      throw invalidArgument(
+        'Expected a non-negative argument for setMaxOperationRetryTime().'
+      );
+    }
+    this._delegate.maxOperationRetryTime = time;
   }
 }

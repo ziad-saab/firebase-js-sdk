@@ -107,7 +107,7 @@ export interface UploadTask {
   on(
     event: TaskEvent,
     nextOrObserver?:
-      | Partial<StorageObserver<UploadTaskSnapshot>>
+      | StorageObserver<UploadTaskSnapshot>
       | null
       | ((a: UploadTaskSnapshot) => unknown),
     error?: ((a: FirebaseStorageError) => any) | null,

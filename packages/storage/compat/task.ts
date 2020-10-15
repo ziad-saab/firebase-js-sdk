@@ -32,29 +32,29 @@ import { FirebaseStorageError } from '../src/implementation/error';
 
 export class UploadTaskCompat implements types.UploadTask {
   constructor(
-    private readonly delegate: UploadTask,
-    private readonly ref: ReferenceCompat
+    private readonly _delegate: UploadTask,
+    private readonly _ref: ReferenceCompat
   ) {}
 
   snapshot = new UploadTaskSnapshotCompat(
-    this.delegate.snapshot,
+    this._delegate.snapshot,
     this,
-    this.ref
+    this._ref
   );
 
-  cancel = this.delegate.cancel;
-  catch = this.delegate.catch;
-  pause = this.delegate.pause;
-  resume = this.delegate.resume;
+  cancel = this._delegate.cancel.bind(this._delegate);
+  catch = this._delegate.catch.bind(this._delegate);
+  pause = this._delegate.pause.bind(this._delegate);
+  resume = this._delegate.resume.bind(this._delegate);
 
   then(
     onFulfilled?: ((a: UploadTaskSnapshotCompat) => unknown) | null,
     onRejected?: ((a: FirebaseStorageError) => unknown) | null
   ): Promise<unknown> {
-    return this.delegate.then(snapshot => {
+    return this._delegate.then(snapshot => {
       if (onFulfilled) {
         return onFulfilled(
-          new UploadTaskSnapshotCompat(snapshot, this, this.ref)
+          new UploadTaskSnapshotCompat(snapshot, this, this._ref)
         );
       }
     }, onRejected);
@@ -63,18 +63,18 @@ export class UploadTaskCompat implements types.UploadTask {
   on(
     type: TaskEvent,
     nextOrObserver?:
-      | Partial<StorageObserver<UploadTaskSnapshotCompat>>
+      | types.StorageObserver<UploadTaskSnapshotCompat>
       | null
       | ((a: UploadTaskSnapshotCompat) => unknown),
     error?: ErrorFn | null,
     completed?: CompleteFn | null
   ): Unsubscribe | Subscribe<UploadTaskSnapshotCompat> {
     // TODO: Wrap all returned values in new snapshot
-    return this.delegate.on(
+    return this._delegate.on(
       type,
-      nextOrObserver as Partial<StorageObserver<UploadTaskSnapshot>>,
-      error,
-      completed
+      (nextOrObserver || undefined) as StorageObserver<UploadTaskSnapshot>,
+      error || undefined,
+      completed || undefined
     );
   }
 }

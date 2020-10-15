@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '@firebase/app-types';
 import { Location } from './implementation/location';
 import { FailRequest } from './implementation/failrequest';
 import { Request, makeRequest } from './implementation/request';
@@ -24,7 +23,11 @@ import { XhrIoPool } from './implementation/xhriopool';
 import { Reference, getChild } from './reference';
 import { Provider } from '@firebase/component';
 import { FirebaseAuthInternalName } from '@firebase/auth-interop-types';
-import { FirebaseOptions } from '@firebase/app-types-exp';
+import {
+  FirebaseApp,
+  FirebaseOptions,
+  _FirebaseService
+} from '@firebase/app-types-exp';
 import * as constants from '../src/implementation/constants';
 import {
   invalidArgument,
@@ -64,7 +67,7 @@ function refFromPath(
     }
   } else {
     // ref is a Reference
-    if (typeof path === 'string') {
+    if (path !== undefined) {
       if (path.includes('..')) {
         throw invalidArgument('`path` param cannot contain ".."');
       }
@@ -99,18 +102,8 @@ export function ref(
         'To use ref(service, url), the first argument must be a Storage instance.'
       );
     }
-  } else if (pathOrUrl !== null) {
-    if (
-      serviceOrRef instanceof StorageService ||
-      serviceOrRef instanceof Reference
-    ) {
-      return refFromPath(serviceOrRef, pathOrUrl);
-    } else {
-      throw invalidArgument(
-        'To use ref(serviceOrRef, path), the first argument must be a Storage' +
-          ' instance or Reference.'
-      );
-    }
+  } else if (pathOrUrl) {
+    return refFromPath(serviceOrRef, pathOrUrl);
   } else {
     // pathOrUrl param not provided
     if (serviceOrRef instanceof StorageService) {
@@ -124,50 +117,56 @@ export function ref(
   }
 }
 
+function extractBucket(config?: FirebaseOptions): Location | null {
+  const bucketString = config?.[constants.CONFIG_STORAGE_BUCKET_KEY];
+  if (bucketString == null) {
+    return null;
+  }
+  return Location.makeFromBucketSpec(bucketString);
+}
+
 /**
  * A service that provides Firebase Storage Reference instances.
  * @param opt_url gs:// url to a custom Storage Bucket
  */
-export class StorageService {
+export class StorageService implements _FirebaseService {
   /**
    * @internal
    */
   readonly _bucket: Location | null = null;
   protected readonly _appId: string | null = null;
   private readonly _requests: Set<Request<unknown>>;
-  /**
-   * @internal
-   */
   private _deleted: boolean = false;
   maxOperationRetryTime: number;
   maxUploadRetryTime: number;
 
   constructor(
     readonly app: FirebaseApp,
-    readonly authProvider_: Provider<FirebaseAuthInternalName>,
-    readonly pool_: XhrIoPool,
-    readonly url_?: string
+    /**
+     * @internal
+     */
+    readonly _authProvider: Provider<FirebaseAuthInternalName>,
+    /**
+     * @internal
+     */
+    readonly _pool: XhrIoPool,
+    /**
+     * @internal
+     */
+    readonly _url?: string
   ) {
     this.maxOperationRetryTime = constants.DEFAULT_MAX_OPERATION_RETRY_TIME;
     this.maxUploadRetryTime = constants.DEFAULT_MAX_UPLOAD_RETRY_TIME;
     this._requests = new Set();
-    if (url_ != null) {
-      this._bucket = Location.makeFromBucketSpec(url_);
+    if (_url != null) {
+      this._bucket = Location.makeFromBucketSpec(_url);
     } else {
-      this._bucket = StorageService.extractBucket_(this.app.options);
+      this._bucket = extractBucket(this.app.options);
     }
-  }
-
-  private static extractBucket_(config?: FirebaseOptions): Location | null {
-    const bucketString = config?.[constants.CONFIG_STORAGE_BUCKET_KEY];
-    if (bucketString == null) {
-      return null;
-    }
-    return Location.makeFromBucketSpec(bucketString);
   }
 
   async getAuthToken(): Promise<string | null> {
-    const auth = this.authProvider_.getImmediate({ optional: true });
+    const auth = this._authProvider.getImmediate({ optional: true });
     if (auth) {
       const tokenData = await auth.getToken();
       if (tokenData !== null) {
@@ -181,18 +180,16 @@ export class StorageService {
    * Stop running requests and prevent more from being created.
    * @internal
    */
-  deleteApp(): void {
+  _delete(): Promise<void> {
     this._deleted = true;
     this._requests.forEach(request => request.cancel());
     this._requests.clear();
+    return Promise.resolve();
   }
 
   /**
    * Returns a new firebaseStorage.Reference object referencing this StorageService
    * at the given Location.
-   * @internal
-   * @param loc - The Location.
-   * @return A firebaseStorage.Reference.
    */
   makeStorageReference(loc: Location): Reference {
     return new Reference(this, loc);
@@ -212,7 +209,7 @@ export class StorageService {
         requestInfo,
         this._appId,
         authToken,
-        this.pool_
+        this._pool
       );
       this._requests.add(request);
       // Request removes itself from set when complete.

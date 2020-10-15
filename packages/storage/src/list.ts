@@ -26,5 +26,5 @@ export interface ListOptions extends types.ListOptions {}
 export interface ListResult {
   prefixes: Reference[];
   items: Reference[];
-  nextPageToken: string | null;
+  nextPageToken?: string;
 }

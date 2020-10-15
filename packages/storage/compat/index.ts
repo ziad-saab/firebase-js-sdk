@@ -43,13 +43,18 @@ function factory(
   url?: string
 ): types.FirebaseStorage {
   // Dependencies
+  // TODO: This should eventually be 'app-compat'
   const app = container.getProvider('app').getImmediate();
   const authProvider = container.getProvider('auth-internal');
 
-  return new StorageServiceCompat(
+  // TODO: get StorageService instance from component framework instead
+  // of creating a new one.
+  const storageServiceCompat: StorageServiceCompat = new StorageServiceCompat(
+    app,
     new StorageService(app, authProvider, new XhrIoPool(), url),
-    ref => new ReferenceCompat(ref)
+    ref => new ReferenceCompat(ref, storageServiceCompat)
   );
+  return storageServiceCompat;
 }
 
 export function registerStorage(instance: _FirebaseNamespace): void {

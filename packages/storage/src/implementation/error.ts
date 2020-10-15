@@ -242,7 +242,7 @@ export function noDownloadURL(): FirebaseStorageError {
 
 export function invalidArgument(message: string): FirebaseStorageError;
 export function invalidArgument(
-  index: number | string,
+  index: number,
   fnName: string,
   message: string
 ): FirebaseStorageError;
