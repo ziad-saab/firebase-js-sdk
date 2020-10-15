@@ -24,7 +24,7 @@ export class FirebaseStorageError implements Error {
 
   constructor(code: Code, message: string) {
     this.code_ = prependCode(code);
-    this.message_ = 'Firebase Storage: ' + message;
+    this.message_ = `Firebase Storage: ${message} (${this.code_})`;
     this.serverResponse_ = null;
     this.name_ = 'FirebaseError';
   }

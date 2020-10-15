@@ -23,12 +23,7 @@ import { Headers } from '../../src/implementation/xhrio';
 import { Reference } from '../../src/reference';
 import { StorageService } from '../../src/service';
 import { UploadTask } from '../../src/task';
-import {
-  assertThrows,
-  bind as fbsBind,
-  makePool,
-  emptyAuthProvider
-} from './testshared';
+import { makePool, emptyAuthProvider } from './testshared';
 import { StringHeaders, TestingXhrIo } from './xhrio';
 import { FirebaseApp } from '@firebase/app-types';
 
@@ -203,7 +198,7 @@ describe('Firebase Storage > Upload Task', () => {
     );
     task.on(
       TaskEvent.STATE_CHANGED,
-      null,
+      undefined,
       () => assert.fail('Unexpected upload failure'),
       () => done()
     );
@@ -242,12 +237,22 @@ describe('Firebase Storage > Upload Task', () => {
     );
 
     let badComplete = false;
-    const h1: Unsubscribe = task.on(TaskEvent.STATE_CHANGED, null, null, () => {
-      badComplete = true;
-    }) as Unsubscribe;
-    const h2: Unsubscribe = task.on(TaskEvent.STATE_CHANGED, null, null, () => {
-      badComplete = true;
-    }) as Unsubscribe;
+    const h1: Unsubscribe = task.on(
+      TaskEvent.STATE_CHANGED,
+      undefined,
+      undefined,
+      () => {
+        badComplete = true;
+      }
+    ) as Unsubscribe;
+    const h2: Unsubscribe = task.on(
+      TaskEvent.STATE_CHANGED,
+      undefined,
+      undefined,
+      () => {
+        badComplete = true;
+      }
+    ) as Unsubscribe;
 
     let resumed = 0;
 
@@ -265,8 +270,8 @@ describe('Firebase Storage > Upload Task', () => {
           }
           lastState = snapshot.state;
         },
-        null,
-        null
+        undefined,
+        undefined
       );
     })();
     h1();
@@ -275,7 +280,7 @@ describe('Firebase Storage > Upload Task', () => {
     return new Promise(resolve => {
       task.on(
         TaskEvent.STATE_CHANGED,
-        null,
+        undefined,
         () => {
           assert.fail('Upload failed');
         },
@@ -393,7 +398,7 @@ describe('Firebase Storage > Upload Task', () => {
 
     let completeTriggered = false;
 
-    task.on(TaskEvent.STATE_CHANGED, null, null, () => {
+    task.on(TaskEvent.STATE_CHANGED, undefined, undefined, () => {
       fixedAssertFalse(completeTriggered);
       completeTriggered = true;
 
@@ -476,98 +481,5 @@ describe('Firebase Storage > Upload Task', () => {
   });
   it('Calls callback sequences for big uploads correctly', () => {
     return runNormalUploadTest(bigBlob);
-  });
-
-  describe('Argument verification', () => {
-    const storageService = storageServiceWithHandler(fakeServerHandler());
-    const task = new UploadTask(
-      new Reference(storageService, testLocation),
-      smallBlob
-    );
-    describe('on', () => {
-      it('Throws on no args', () => {
-        assertThrows(fbsBind(task.on, task), 'storage/invalid-argument-count');
-      });
-      it('Throws on 5 args', () => {
-        assertThrows(
-          fbsBind(task.on, task, TaskEvent.STATE_CHANGED, null, null, null, 1),
-          'storage/invalid-argument-count'
-        );
-      });
-      it('Throws on a single string arg', () => {
-        assertThrows(fbsBind(task.on, task, '3'), 'storage/invalid-argument');
-      });
-      it('Throws on a single null arg', () => {
-        assertThrows(fbsBind(task.on, task, null), 'storage/invalid-argument');
-      });
-      it('Throws on a number arg instead of a function', () => {
-        assertThrows(
-          fbsBind(task.on, task, TaskEvent.STATE_CHANGED, null, null, 3),
-          'storage/invalid-argument'
-        );
-      });
-      it('Throws on an empty object arg', () => {
-        assertThrows(
-          fbsBind(task.on, task, TaskEvent.STATE_CHANGED, {}),
-          'storage/invalid-argument'
-        );
-      });
-    });
-    describe('subscribe returned from on', () => {
-      it('Throws on no args', () => {
-        assertThrows(
-          fbsBind(task.on(TaskEvent.STATE_CHANGED), null),
-          'storage/invalid-argument-count'
-        );
-      });
-      it('Throws on 4 args', () => {
-        assertThrows(
-          fbsBind(task.on(TaskEvent.STATE_CHANGED), null, null, null, null, 1),
-          'storage/invalid-argument-count'
-        );
-      });
-      it('Throws number arg instead of function', () => {
-        assertThrows(
-          fbsBind(task.on(TaskEvent.STATE_CHANGED), null, null, null, 3),
-          'storage/invalid-argument'
-        );
-      });
-      it('Throws on an empty object arg', () => {
-        assertThrows(
-          fbsBind(task.on(TaskEvent.STATE_CHANGED), null, {}),
-          'storage/invalid-argument'
-        );
-      });
-      it('Throws on a single null arg', () => {
-        assertThrows(
-          fbsBind(task.on(TaskEvent.STATE_CHANGED), null, null),
-          'storage/invalid-argument'
-        );
-      });
-    });
-    describe('resume', () => {
-      it('Throws on a number', () => {
-        assertThrows(
-          fbsBind(task.resume, task, 3),
-          'storage/invalid-argument-count'
-        );
-      });
-    });
-    describe('pause', () => {
-      it('Throws on a number', () => {
-        assertThrows(
-          fbsBind(task.pause, task, 3),
-          'storage/invalid-argument-count'
-        );
-      });
-    });
-    describe('cancel', () => {
-      it('Throws on a number', () => {
-        assertThrows(
-          fbsBind(task.cancel, task, 3),
-          'storage/invalid-argument-count'
-        );
-      });
-    });
   });
 });

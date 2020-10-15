@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { assert } from 'chai';
+import { expect } from 'chai';
 import { FirebaseApp } from '@firebase/app-types';
 import { StringFormat } from '../../src/implementation/string';
 import { Headers } from '../../src/implementation/xhrio';
@@ -35,10 +35,12 @@ function makeFakeService(
   authProvider: Provider<FirebaseAuthInternalName>,
   sendHook: SendHook
 ): StorageServiceCompat {
-  return new StorageServiceCompat(
+  const storageServiceCompat: StorageServiceCompat = new StorageServiceCompat(
+    app,
     new StorageService(app, authProvider, testShared.makePool(sendHook)),
-    ref => new ReferenceCompat(ref)
+    ref => new ReferenceCompat(ref, storageServiceCompat)
   );
+  return storageServiceCompat;
 }
 
 function makeStorage(url: string): ReferenceCompat {
@@ -47,7 +49,12 @@ function makeStorage(url: string): ReferenceCompat {
     testShared.emptyAuthProvider,
     testShared.makePool(null)
   );
-  return new ReferenceCompat(new Reference(service, url));
+  const storageServiceCompat: StorageServiceCompat = new StorageServiceCompat(
+    {} as FirebaseApp,
+    service,
+    ref => new ReferenceCompat(ref, storageServiceCompat)
+  );
+  return new ReferenceCompat(new Reference(service, url), storageServiceCompat);
 }
 
 describe('Firebase Storage > Reference', () => {
@@ -55,28 +62,28 @@ describe('Firebase Storage > Reference', () => {
   const child = makeStorage('gs://test-bucket/hello');
   describe('Path constructor', () => {
     it('root', () => {
-      assert.equal(root.toString(), 'gs://test-bucket/');
+      expect(root.toString()).to.equal('gs://test-bucket/');
     });
     it('keeps characters after ? on a gs:// string', () => {
       const s = makeStorage('gs://test-bucket/this/ismyobject?hello');
-      assert.equal(s.toString(), 'gs://test-bucket/this/ismyobject?hello');
+      expect(s.toString()).to.equal('gs://test-bucket/this/ismyobject?hello');
     });
     it("doesn't URL-decode on a gs:// string", () => {
       const s = makeStorage('gs://test-bucket/%3F');
-      assert.equal(s.toString(), 'gs://test-bucket/%3F');
+      expect(s.toString()).to.equal('gs://test-bucket/%3F');
     });
     it('ignores URL params and fragments on an http URL', () => {
       const s = makeStorage(
         `http://${DEFAULT_HOST}/v0/b/test-bucket/o/my/object.txt` +
           '?ignoreme#please'
       );
-      assert.equal(s.toString(), 'gs://test-bucket/my/object.txt');
+      expect(s.toString()).to.equal('gs://test-bucket/my/object.txt');
     });
     it('URL-decodes and ignores fragment on an http URL', () => {
       const s = makeStorage(
         `http://${DEFAULT_HOST}/v0/b/test-bucket/o/%3F?ignore`
       );
-      assert.equal(s.toString(), 'gs://test-bucket/?');
+      expect(s.toString()).to.equal('gs://test-bucket/?');
     });
 
     it('ignores URL params and fragments on an https URL', () => {
@@ -84,95 +91,93 @@ describe('Firebase Storage > Reference', () => {
         `https://${DEFAULT_HOST}/v0/b/test-bucket/o/my/object.txt` +
           '?ignoreme#please'
       );
-      assert.equal(s.toString(), 'gs://test-bucket/my/object.txt');
+      expect(s.toString()).to.equal('gs://test-bucket/my/object.txt');
     });
 
     it('URL-decodes and ignores fragment on an https URL', () => {
       const s = makeStorage(
         `https://${DEFAULT_HOST}/v0/b/test-bucket/o/%3F?ignore`
       );
-      assert.equal(s.toString(), 'gs://test-bucket/?');
+      expect(s.toString()).to.equal('gs://test-bucket/?');
     });
   });
 
   describe('toString', () => {
     it("Doesn't add trailing slash", () => {
       const s = makeStorage('gs://test-bucket/foo');
-      assert.equal(s.toString(), 'gs://test-bucket/foo');
+      expect(s.toString()).to.equal('gs://test-bucket/foo');
     });
     it('Strips trailing slash', () => {
       const s = makeStorage('gs://test-bucket/foo/');
-      assert.equal(s.toString(), 'gs://test-bucket/foo');
+      expect(s.toString()).to.equal('gs://test-bucket/foo');
     });
   });
 
   describe('parent', () => {
     it('Returns null at root', () => {
-      assert.isNull(root.parent);
+      expect(root.parent).to.be.null;
     });
     it('Returns root one level down', () => {
-      assert.equal(child.parent!.toString(), 'gs://test-bucket/');
+      expect(child.parent!.toString()).to.equal('gs://test-bucket/');
     });
     it('Works correctly with empty levels', () => {
       const s = makeStorage('gs://test-bucket/a///');
-      assert.equal(s.parent!.toString(), 'gs://test-bucket/a/');
+      expect(s.parent!.toString()).to.equal('gs://test-bucket/a/');
     });
   });
 
   describe('root', () => {
     it('Returns self at root', () => {
-      assert.equal(root.root.toString(), 'gs://test-bucket/');
+      expect(root.root.toString()).to.equal('gs://test-bucket/');
     });
 
     it('Returns root multiple levels down', () => {
       const s = makeStorage('gs://test-bucket/a/b/c/d');
-      assert.equal(s.root.toString(), 'gs://test-bucket/');
+      expect(s.root.toString()).to.equal('gs://test-bucket/');
     });
   });
 
   describe('bucket', () => {
     it('Returns bucket name', () => {
-      assert.equal(root.bucket, 'test-bucket');
+      expect(root.bucket).to.equal('test-bucket');
     });
   });
 
   describe('fullPath', () => {
     it('Returns full path without leading slash', () => {
       const s = makeStorage('gs://test-bucket/full/path');
-      assert.equal(s.fullPath, 'full/path');
+      expect(s.fullPath).to.equal('full/path');
     });
   });
 
   describe('name', () => {
     it('Works at top level', () => {
       const s = makeStorage('gs://test-bucket/toplevel.txt');
-      assert.equal(s.name, 'toplevel.txt');
+      expect(s.name).to.equal('toplevel.txt');
     });
 
     it('Works at not the top level', () => {
       const s = makeStorage('gs://test-bucket/not/toplevel.txt');
-      assert.equal('toplevel.txt', s.name);
+      expect('toplevel.txt').to.equal(s.name);
     });
   });
 
   describe('child', () => {
     it('works with a simple string', () => {
-      assert.equal(root.child('a').toString(), 'gs://test-bucket/a');
+      expect(root.child('a').toString()).to.equal('gs://test-bucket/a');
     });
     it('drops a trailing slash', () => {
-      assert.equal(root.child('ab/').toString(), 'gs://test-bucket/ab');
+      expect(root.child('ab/').toString()).to.equal('gs://test-bucket/ab');
     });
     it('compresses repeated slashes', () => {
-      assert.equal(
-        root.child('//a///b/////').toString(),
+      expect(root.child('//a///b/////').toString()).to.equal(
         'gs://test-bucket/a/b'
       );
     });
     it('works chained multiple times with leading slashes', () => {
-      assert.equal(
-        root.child('a').child('/b').child('c').child('d/e').toString(),
-        'gs://test-bucket/a/b/c/d/e'
-      );
+      expect(
+        root.child('a').child('/b').child('c').child('d/e').toString()
+      ).to.equal('gs://test-bucket/a/b/c/d/e');
     });
   });
 
@@ -184,8 +189,8 @@ describe('Firebase Storage > Reference', () => {
       body?: ArrayBufferView | Blob | string | null,
       headers?: Headers
     ): void {
-      assert.isDefined(headers);
-      assert.isUndefined(headers!['Authorization']);
+      expect(headers).to.not.be.undefined;
+      expect(headers!['Authorization']).to.be.undefined;
       done();
     }
 
@@ -207,9 +212,8 @@ describe('Firebase Storage > Reference', () => {
       body?: ArrayBufferView | Blob | string | null,
       headers?: Headers
     ): void {
-      assert.isDefined(headers);
-      assert.equal(
-        headers!['Authorization'],
+      expect(headers).to.not.be.undefined;
+      expect(headers!['Authorization']).to.equal(
         'Firebase ' + testShared.authToken
       );
       done();
@@ -230,7 +234,7 @@ describe('Firebase Storage > Reference', () => {
       const task = child.putString('hello', StringFormat.RAW, {
         contentType: 'lol/wut'
       } as Metadata);
-      assert.equal(task.snapshot.metadata!.contentType, 'lol/wut');
+      expect(task.snapshot.metadata!.contentType).to.equal('lol/wut');
       task.cancel();
     });
     it('Uses embedded content type in DATA_URL format', () => {
@@ -238,7 +242,7 @@ describe('Firebase Storage > Reference', () => {
         'data:lol/wat;base64,aaaa',
         StringFormat.DATA_URL
       );
-      assert.equal(task.snapshot.metadata!.contentType, 'lol/wat');
+      expect(task.snapshot.metadata!.contentType).to.equal('lol/wat');
       task.cancel();
     });
     it('Lets metadata.contentType override embedded content type in DATA_URL format', () => {
@@ -247,365 +251,55 @@ describe('Firebase Storage > Reference', () => {
         StringFormat.DATA_URL,
         { contentType: 'tomato/soup' } as Metadata
       );
-      assert.equal(task.snapshot.metadata!.contentType, 'tomato/soup');
+      expect(task.snapshot.metadata!.contentType).to.equal('tomato/soup');
       task.cancel();
     });
   });
 
   describe('Argument verification', () => {
-    describe('child', () => {
-      it('throws on no args', () => {
-        testShared.assertThrows(
-          testShared.bind(root.child, root),
-          'storage/invalid-argument-count'
-        );
-      });
-      it('throws on null instead of path', () => {
-        testShared.assertThrows(
-          testShared.bind(root.child, root, null),
-          'storage/invalid-argument'
-        );
-      });
-      it('throws on number instead of path', () => {
-        testShared.assertThrows(
-          testShared.bind(root.child, root, 3),
-          'storage/invalid-argument'
-        );
-      });
-    });
-
-    describe('toString', () => {
-      it('throws on number arg', () => {
-        testShared.assertThrows(
-          testShared.bind(root.toString, root, 3),
-          'storage/invalid-argument-count'
-        );
-      });
-    });
-
-    describe('put', () => {
-      const blob = new Blob(['a']);
-      it('throws on no arguments', () => {
-        testShared.assertThrows(
-          testShared.bind(child.put, child),
-          'storage/invalid-argument-count'
-        );
-      });
-      it('throws on number instead of metadata', () => {
-        testShared.assertThrows(
-          testShared.bind(child.put, child, new Blob([]), 3),
-          'storage/invalid-argument'
-        );
-      });
-      it('throws on number instead of data', () => {
-        testShared.assertThrows(
-          testShared.bind(child.put, child, 3),
-          'storage/invalid-argument'
-        );
-      });
-      it('throws null instead of data', () => {
-        testShared.assertThrows(
-          testShared.bind(child.put, child, null),
-          'storage/invalid-argument'
-        );
-      });
-      it("doesn't throw on good metadata", () => {
-        const goodMetadata = {
-          md5Hash: 'a',
-          cacheControl: 'done',
-          contentDisposition: 'legit',
-          contentEncoding: 'identity',
-          contentLanguage: 'en',
-          contentType: 'text/legit'
-        };
-        assert.doesNotThrow(() => {
-          const task = child.put(blob, goodMetadata as Metadata);
-          task.cancel();
-        });
-      });
-      it('throws when customMetadata is a string instead of an object', () => {
-        const badCustomMetadata = {
-          md5Hash: 'a',
-          cacheControl: 'done',
-          contentDisposition: 'legit',
-          contentEncoding: 'identity',
-          contentLanguage: 'en',
-          contentType: 'text/legit',
-          customMetadata: 'yo'
-        };
-        testShared.assertThrows(
-          testShared.bind(child.put, child, blob, badCustomMetadata),
-          'storage/invalid-argument'
-        );
-      });
-      it('throws when object is supplied instead of string', () => {
-        const objectInsteadOfStringInMetadata = {
-          md5Hash: { real: 'hash' },
-          cacheControl: 'done',
-          contentDisposition: 'legit',
-          contentEncoding: 'identity',
-          contentLanguage: 'en',
-          contentType: 'text/legit'
-        };
-        testShared.assertThrows(
-          testShared.bind(
-            child.put,
-            child,
-            blob,
-            objectInsteadOfStringInMetadata
-          ),
-          'storage/invalid-argument'
-        );
-      });
-    });
-
-    describe('putString', () => {
-      it('throws on no arguments', () => {
-        testShared.assertThrows(
-          testShared.bind(child.putString, child),
-          'storage/invalid-argument-count'
-        );
-      });
-      it('throws on invalid format', () => {
-        testShared.assertThrows(
-          testShared.bind(child.putString, child, 'raw', 'notaformat'),
-          'storage/invalid-argument'
-        );
-      });
-      it('throws on number instead of string', () => {
-        testShared.assertThrows(
-          testShared.bind(child.putString, child, 3, StringFormat.RAW),
-          'storage/invalid-argument'
-        );
-      });
-      it('throws on invalid metadata', () => {
-        testShared.assertThrows(
-          testShared.bind(child.putString, child, 'raw', StringFormat.RAW, 3),
-          'storage/invalid-argument'
-        );
-      });
-    });
-
-    describe('delete', () => {
-      it('throws on a number arg', () => {
-        testShared.assertThrows(
-          testShared.bind(child.delete, child, 3),
-          'storage/invalid-argument-count'
-        );
-      });
-    });
-
-    describe('getMetadata', () => {
-      it('throws on a number arg', () => {
-        testShared.assertThrows(
-          testShared.bind(child.getMetadata, child, 3),
-          'storage/invalid-argument-count'
-        );
-      });
-    });
-
-    describe('listAll', () => {
-      it('throws on number arg', () => {
-        testShared.assertThrows(
-          testShared.bind(child.listAll, child, 1),
-          'storage/invalid-argument-count'
-        );
-      });
-    });
-
     describe('list', () => {
-      it('throws on invalid option', () => {
-        testShared.assertThrows(
-          testShared.bind(child.list, child, 'invalid-option'),
-          'storage/invalid-argument'
-        );
-      });
-      it('throws on number arg', () => {
-        testShared.assertThrows(
-          testShared.bind(child.list, child, 1, 2),
-          'storage/invalid-argument-count'
-        );
-      });
-      it('throws on non-string pageToken', () => {
-        testShared.assertThrows(
-          testShared.bind(child.list, child, { pageToken: { x: 1 } }),
-          'storage/invalid-argument'
-        );
-      });
-      it('throws on non-int maxResults', () => {
-        testShared.assertThrows(
-          testShared.bind(child.list, child, { maxResults: '4' }),
-          'storage/invalid-argument'
-        );
-        testShared.assertThrows(
-          testShared.bind(child.list, child, { maxResults: 1.2 }),
-          'storage/invalid-argument'
-        );
-      });
       it('throws on invalid maxResults', () => {
-        testShared.assertThrows(
-          testShared.bind(child.list, child, { maxResults: 0 }),
-          'storage/invalid-argument'
-        );
-        testShared.assertThrows(
-          testShared.bind(child.list, child, { maxResults: -4 }),
-          'storage/invalid-argument'
-        );
-        testShared.assertThrows(
-          testShared.bind(child.list, child, { maxResults: 1001 }),
-          'storage/invalid-argument'
-        );
-      });
-      it('throws on unkonw option', () => {
-        testShared.assertThrows(
-          testShared.bind(child.list, child, { unknown: 'ok' }),
-          'storage/invalid-argument'
-        );
-      });
-    });
-
-    describe('updateMetadata', () => {
-      it('throws on no args', () => {
-        testShared.assertThrows(
-          testShared.bind(child.updateMetadata, child),
-          'storage/invalid-argument-count'
-        );
-      });
-      it('throws on number arg', () => {
-        testShared.assertThrows(
-          testShared.bind(child.updateMetadata, child, 3),
-          'storage/invalid-argument'
-        );
-      });
-      it('throws on null arg', () => {
-        testShared.assertThrows(
-          testShared.bind(child.updateMetadata, child, null),
-          'storage/invalid-argument'
-        );
-      });
-    });
-
-    describe('getDownloadURL', () => {
-      it('throws on number arg', () => {
-        testShared.assertThrows(
-          testShared.bind(child.getDownloadURL, child, 3),
-          'storage/invalid-argument-count'
-        );
-      });
-    });
-  });
-
-  describe('non-root operations', () => {
-    it("put doesn't throw", () => {
-      assert.doesNotThrow(() => {
-        child.put(new Blob(['a']));
-        child.put(new Uint8Array(10));
-        child.put(new ArrayBuffer(10));
-      });
-    });
-    it("putString doesn't throw", () => {
-      assert.doesNotThrow(() => {
-        child.putString('raw', StringFormat.RAW);
-        child.putString('aaaa', StringFormat.BASE64);
-        child.putString('aaaa', StringFormat.BASE64URL);
-        child.putString(
-          'data:application/octet-stream;base64,aaaa',
-          StringFormat.DATA_URL
-        );
-      });
-    });
-    it("delete doesn't throw", () => {
-      assert.doesNotThrow(() => {
-        child.delete();
-      });
-    });
-    it("getMetadata doesn't throw", () => {
-      assert.doesNotThrow(() => {
-        child.getMetadata();
-      });
-    });
-    it("listAll doesn't throw", () => {
-      assert.doesNotThrow(() => {
-        child.listAll();
-      });
-    });
-    it("list doesn't throw", () => {
-      assert.doesNotThrow(() => {
-        child.list();
-      });
-      assert.doesNotThrow(() => {
-        child.list({ pageToken: 'xxx', maxResults: 4 });
-      });
-      assert.doesNotThrow(() => {
-        child.list({ pageToken: 'xxx' });
-      });
-      assert.doesNotThrow(() => {
-        child.list({ maxResults: 4 });
-      });
-      assert.doesNotThrow(() => {
-        child.list({ maxResults: 4, pageToken: null });
-      });
-    });
-    it("updateMetadata doesn't throw", () => {
-      assert.doesNotThrow(() => {
-        child.updateMetadata({} as Metadata);
-      });
-    });
-    it("getDownloadURL doesn't throw", () => {
-      assert.doesNotThrow(() => {
-        child.getDownloadURL();
+        it('throws on invalid maxResults', async () => {
+          await expect(child.list({ maxResults: 0 })).to.be.rejectedWith(
+            'storage/invalid-argument'
+          );
+          await expect(child.list({ maxResults: -4 })).to.be.rejectedWith(
+            'storage/invalid-argument'
+          );
+          await expect(child.list({ maxResults: 1001 })).to.be.rejectedWith(
+            'storage/invalid-argument'
+          );
+        });
       });
     });
   });
 
   describe('root operations', () => {
     it('put throws', () => {
-      testShared.assertThrows(
-        root.put.bind(root, new Blob(['a'])),
+      expect(() => root.put(new Blob(['a']))).to.throw(
         'storage/invalid-root-operation'
       );
     });
     it('putString throws', () => {
-      testShared.assertThrows(
-        root.putString.bind(root, 'raw', StringFormat.RAW),
+      expect(() => root.putString('raw', StringFormat.RAW)).to.throw(
         'storage/invalid-root-operation'
       );
     });
     it('delete throws', () => {
-      testShared.assertThrows(
-        root.delete.bind(root),
+      expect(() => root.delete()).to.throw('storage/invalid-root-operation');
+    });
+    it('getMetadata throws', async () => {
+      await expect(root.getMetadata()).to.be.rejectedWith(
         'storage/invalid-root-operation'
       );
     });
-    it('getMetadata throws', () => {
-      testShared.assertThrows(
-        root.getMetadata.bind(root),
+    it('updateMetadata throws', async () => {
+      await expect(root.updateMetadata({} as Metadata)).to.be.rejectedWith(
         'storage/invalid-root-operation'
       );
     });
-    it("listAll doesn't throw", () => {
-      assert.doesNotThrow(() => {
-        root.listAll();
-      });
-    });
-    it("list doesn't throw", () => {
-      assert.doesNotThrow(() => {
-        root.list();
-      });
-      assert.doesNotThrow(() => {
-        root.list({ pageToken: 'xxx', maxResults: 4 });
-      });
-    });
-    it('updateMetadata throws', () => {
-      testShared.assertThrows(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (root as any).updateMetadata.bind(root, {}),
-        'storage/invalid-root-operation'
-      );
-    });
-    it('getDownloadURL throws', () => {
-      testShared.assertThrows(
-        root.getDownloadURL.bind(root),
+    it('getDownloadURL throws', async () => {
+      await expect(root.getDownloadURL()).to.be.rejectedWith(
         'storage/invalid-root-operation'
       );
     });

@@ -14,14 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { assert } from 'chai';
+import { expect } from 'chai';
 import { TaskEvent } from '../../src/implementation/taskenums';
 import { XhrIoPool } from '../../src/implementation/xhriopool';
 import { StorageService, ref } from '../../src/service';
 import * as testShared from './testshared';
 import { DEFAULT_HOST } from '../../src/implementation/constants';
 import { FirebaseStorageError } from '../../src/implementation/error';
-import { Reference, getMetadata, uploadBytes } from '../../src/reference';
+import {
+  Reference,
+  getMetadata,
+  uploadBytesResumable
+} from '../../src/reference';
 import { Location } from '../../src/implementation/location';
 
 const fakeAppGs = testShared.makeFakeApp('gs://mybucket');
@@ -43,11 +47,11 @@ describe('Firebase Storage > Service', () => {
     );
     it('Root refs point to the right place', () => {
       const reference = ref(service);
-      assert.equal(reference.toString(), makeGsUrl());
+      expect(reference.toString()).to.equal(makeGsUrl());
     });
     it('Child refs point to the right place', () => {
       const reference = ref(service, 'path/to/child');
-      assert.equal(reference.toString(), makeGsUrl('path/to/child'));
+      expect(reference.toString()).to.equal(makeGsUrl('path/to/child'));
     });
   });
   describe('custom bucket constructor', () => {
@@ -59,7 +63,7 @@ describe('Firebase Storage > Service', () => {
         'gs://foo-bar.appspot.com'
       );
       const reference = ref(service);
-      assert.equal(reference.toString(), 'gs://foo-bar.appspot.com/');
+      expect(reference.toString()).to.equal('gs://foo-bar.appspot.com/');
     });
     it('http:// custom bucket constructor refs point to the right place', () => {
       const service = new StorageService(
@@ -69,7 +73,7 @@ describe('Firebase Storage > Service', () => {
         `http://${DEFAULT_HOST}/v1/b/foo-bar.appspot.com/o`
       );
       const reference = ref(service);
-      assert.equal(reference.toString(), 'gs://foo-bar.appspot.com/');
+      expect(reference.toString()).to.equal('gs://foo-bar.appspot.com/');
     });
     it('https:// custom bucket constructor refs point to the right place', () => {
       const service = new StorageService(
@@ -79,7 +83,7 @@ describe('Firebase Storage > Service', () => {
         `https://${DEFAULT_HOST}/v1/b/foo-bar.appspot.com/o`
       );
       const reference = ref(service);
-      assert.equal(reference.toString(), 'gs://foo-bar.appspot.com/');
+      expect(reference.toString()).to.equal('gs://foo-bar.appspot.com/');
     });
 
     it('Bare bucket name constructor refs point to the right place', () => {
@@ -90,7 +94,7 @@ describe('Firebase Storage > Service', () => {
         'foo-bar.appspot.com'
       );
       const reference = ref(service);
-      assert.equal(reference.toString(), 'gs://foo-bar.appspot.com/');
+      expect(reference.toString()).to.equal('gs://foo-bar.appspot.com/');
     });
     it('Child refs point to the right place', () => {
       const service = new StorageService(
@@ -100,8 +104,7 @@ describe('Firebase Storage > Service', () => {
         'foo-bar.appspot.com'
       );
       const reference = ref(service, 'path/to/child');
-      assert.equal(
-        reference.toString(),
+      expect(reference.toString()).to.equal(
         'gs://foo-bar.appspot.com/path/to/child'
       );
     });
@@ -114,7 +117,7 @@ describe('Firebase Storage > Service', () => {
           'gs://bucket/object/'
         );
       }, 'storage/invalid-default-bucket');
-      assert.match(error.message, /Invalid default bucket/);
+      expect(error.message).to.match(/Invalid default bucket/);
     });
   });
   describe('default bucket config', () => {
@@ -124,7 +127,7 @@ describe('Firebase Storage > Service', () => {
         testShared.fakeAuthProvider,
         xhrIoPool
       );
-      assert.equal(ref(service)?.toString(), 'gs://mybucket/');
+      expect(ref(service)?.toString()).to.equal('gs://mybucket/');
     });
     it('gs:// works with ending slash', () => {
       const service = new StorageService(
@@ -132,7 +135,7 @@ describe('Firebase Storage > Service', () => {
         testShared.fakeAuthProvider,
         xhrIoPool
       );
-      assert.equal(ref(service)?.toString(), 'gs://mybucket/');
+      expect(ref(service)?.toString()).to.equal('gs://mybucket/');
     });
     it('Throws when config bucket is gs:// with an object path', () => {
       testShared.assertThrows(() => {
@@ -152,7 +155,9 @@ describe('Firebase Storage > Service', () => {
     );
     it('Works with gs:// URLs', () => {
       const reference = ref(service, 'gs://mybucket/child/path/image.png');
-      assert.equal(reference.toString(), 'gs://mybucket/child/path/image.png');
+      expect(reference.toString()).to.equal(
+        'gs://mybucket/child/path/image.png'
+      );
     });
     it('Works with http:// URLs', () => {
       const reference = ref(
@@ -160,7 +165,9 @@ describe('Firebase Storage > Service', () => {
         `http://${DEFAULT_HOST}/v0/b/` +
           'mybucket/o/child%2Fpath%2Fimage.png?downloadToken=hello'
       );
-      assert.equal(reference.toString(), 'gs://mybucket/child/path/image.png');
+      expect(reference.toString()).to.equal(
+        'gs://mybucket/child/path/image.png'
+      );
     });
     it('Works with https:// URLs', () => {
       const reference = ref(
@@ -168,15 +175,16 @@ describe('Firebase Storage > Service', () => {
         `https://${DEFAULT_HOST}/v0/b/` +
           'mybucket/o/child%2Fpath%2Fimage.png?downloadToken=hello'
       );
-      assert.equal(reference.toString(), 'gs://mybucket/child/path/image.png');
+      expect(reference.toString()).to.equal(
+        'gs://mybucket/child/path/image.png'
+      );
     });
     it('Works with storage.googleapis.com URLs', () => {
       const reference = ref(
         service,
         `https://storage.googleapis.com/mybucket/path%20with%20space/image.png`
       );
-      assert.equal(
-        reference.toString(),
+      expect(reference.toString()).to.equal(
         'gs://mybucket/path with space/image.png'
       );
     });
@@ -186,8 +194,7 @@ describe('Firebase Storage > Service', () => {
         `https://storage.googleapis.com/mybucket/path%20with%20space/image.png?X-Goog-Algorithm=
 GOOG4-RSA-SHA256`
       );
-      assert.equal(
-        reference.toString(),
+      expect(reference.toString()).to.equal(
         'gs://mybucket/path with space/image.png'
       );
     });
@@ -196,8 +203,7 @@ GOOG4-RSA-SHA256`
         service,
         `https://storage.cloud.google.com/mybucket/path%20with%20space/image.png`
       );
-      assert.equal(
-        reference.toString(),
+      expect(reference.toString()).to.equal(
         'gs://mybucket/path with space/image.png'
       );
     });
@@ -206,8 +212,7 @@ GOOG4-RSA-SHA256`
         service,
         `https://storage.cloud.google.com/mybucket/path%20with%20space%2Fimage.png`
       );
-      assert.equal(
-        reference.toString(),
+      expect(reference.toString()).to.equal(
         'gs://mybucket/path with space/image.png'
       );
     });
@@ -220,11 +225,11 @@ GOOG4-RSA-SHA256`
     );
     it('Works with non URL paths', () => {
       const newRef = ref(service, 'child/path/image.png');
-      assert.equal(newRef.toString(), 'gs://mybucket/child/path/image.png');
+      expect(newRef.toString()).to.equal('gs://mybucket/child/path/image.png');
     });
     it('Works with no path', () => {
       const newRef = ref(service);
-      assert.equal(newRef.toString(), 'gs://mybucket/');
+      expect(newRef.toString()).to.equal('gs://mybucket/');
     });
   });
   describe('ref(reference, path)', () => {
@@ -238,69 +243,35 @@ GOOG4-RSA-SHA256`
       const error = testShared.assertThrows(() => {
         ref(reference, 'gs://bucket/object');
       }, 'storage/invalid-argument');
-      assert.match(error.message, /url/);
+      expect(error.message).to.match(/url/);
     });
     it('Throws calling ref(reference, path) with an http:// URL', () => {
       const error = testShared.assertThrows(() => {
         ref(reference, `http://${DEFAULT_HOST}/etc`);
       }, 'storage/invalid-argument');
-      assert.match(error.message, /url/);
+      expect(error.message).to.match(/url/);
     });
     it('Throws calling ref(reference, path) with an https:// URL', () => {
       const error = testShared.assertThrows(() => {
         ref(reference, `https://${DEFAULT_HOST}/etc`);
       }, 'storage/invalid-argument');
-      assert.match(error.message, /url/);
+      expect(error.message).to.match(/url/);
     });
     it('Works with non URL paths', () => {
       const newRef = ref(reference, 'child/path/image.png');
-      assert.equal(
-        newRef.toString(),
+      expect(newRef.toString()).to.equal(
         'gs://bucket/object/child/path/image.png'
       );
     });
     it('Works with no path', () => {
       const newRef = ref(reference);
-      assert.equal(newRef.toString(), 'gs://bucket/object');
+      expect(newRef.toString()).to.equal('gs://bucket/object');
     });
     it('Throws calling ref(reference, path) if path contains ".."', () => {
       const error = testShared.assertThrows(() => {
         ref(reference, `../child/path`);
       }, 'storage/invalid-argument');
-      assert.match(error.message, /"\.\."/);
-    });
-  });
-  describe('Argument verification', () => {
-    const service = new StorageService(
-      testShared.fakeApp,
-      testShared.fakeAuthProvider,
-      xhrIoPool
-    );
-    describe('reference', () => {
-      it('Throws with no args', () => {
-        testShared.assertThrows(
-          testShared.bind(ref, service),
-          'storage/invalid-argument'
-        );
-      });
-      it('Throws on gs:// argument', () => {
-        testShared.assertThrows(
-          testShared.bind(ref, service, 'gs://yo'),
-          'storage/invalid-argument'
-        );
-      });
-      it('Throws on number argument', () => {
-        testShared.assertThrows(
-          testShared.bind(ref, service, 3),
-          'storage/invalid-argument'
-        );
-      });
-      it('Throws on null argument', () => {
-        testShared.assertThrows(
-          testShared.bind(ref, service, null),
-          'storage/invalid-argument'
-        );
-      });
+      expect(error.message).to.match(/"\.\."/);
     });
   });
 
@@ -310,53 +281,39 @@ GOOG4-RSA-SHA256`
       testShared.fakeAuthProvider,
       xhrIoPool
     );
-    it('In-flight requests are canceled when the service is deleted', () => {
+    it('In-flight requests are canceled when the service is deleted', async () => {
       const reference = ref(service, 'gs://mybucket/image.jpg');
-      const toReturn = getMetadata(reference!).then(
-        () => {
-          assert.fail('Promise succeeded, should have been canceled');
-        },
-        err => {
-          assert.equal(err.code, 'storage/app-deleted');
-        }
-      );
+      const metadataPromise = getMetadata(reference);
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      service.deleteApp();
-      return toReturn;
+      service._delete();
+      await expect(metadataPromise).to.be.rejectedWith('storage/app-deleted');
     });
-    it('Requests fail when started after the service is deleted', () => {
+    it('Requests fail when started after the service is deleted', async () => {
       const reference = ref(service, 'gs://mybucket/image.jpg');
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      service.deleteApp();
-      const toReturn = getMetadata(reference!).then(
-        () => {
-          assert.fail('Promise succeeded, should have been canceled');
-        },
-        err => {
-          assert.equal(err.code, 'storage/app-deleted');
-        }
+      service._delete();
+      await expect(getMetadata(reference)).to.be.rejectedWith(
+        'storage/app-deleted'
       );
-      return toReturn;
     });
     it('Running uploads fail when the service is deleted', () => {
       const reference = ref(service, 'gs://mybucket/image.jpg');
       const toReturn = new Promise((resolve, reject) => {
-        uploadBytes(reference, new Blob(['a'])).on(
+        uploadBytesResumable(reference, new Blob(['a'])).on(
           TaskEvent.STATE_CHANGED,
-          null,
+          undefined,
           (err: FirebaseStorageError | Error) => {
-            assert.equal(
-              (err as FirebaseStorageError).code,
+            expect((err as FirebaseStorageError).code).to.equal(
               'storage/app-deleted'
             );
             resolve();
           },
           () => {
-            assert.fail('Upload completed, should have been canceled');
+            reject('Upload completed, should have been canceled');
           }
         );
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        service.deleteApp();
+        service._delete();
       });
       return toReturn;
     });

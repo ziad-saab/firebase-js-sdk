@@ -102,18 +102,8 @@ export function ref(
         'To use ref(service, url), the first argument must be a Storage instance.'
       );
     }
-  } else if (pathOrUrl) {
-    return refFromPath(serviceOrRef, pathOrUrl);
   } else {
-    // pathOrUrl param not provided
-    if (serviceOrRef instanceof StorageService) {
-      return refFromPath(serviceOrRef);
-    } else {
-      throw invalidArgument(
-        'To get the root reference, a Storage instance must be provided as' +
-          ' the param. Example: ref(storageInstance);'
-      );
-    }
+    return refFromPath(serviceOrRef, pathOrUrl);
   }
 }
 

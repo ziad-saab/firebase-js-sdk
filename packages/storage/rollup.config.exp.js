@@ -21,6 +21,7 @@ import typescript from 'typescript';
 import pkgExp from './exp/package.json';
 import pkg from './package.json';
 import path from 'path';
+import { importPathTransformer } from '../../scripts/exp/ts-transform-import-path';
 
 const deps = Object.keys(
   Object.assign({}, pkg.peerDependencies, pkg.dependencies)
@@ -34,7 +35,8 @@ const plugins = [
         target: 'es2017'
       }
     },
-    abortOnError: false
+    abortOnError: false,
+    transformers: [importPathTransformer]
   }),
   json({ preferConst: true })
 ];

@@ -19,7 +19,7 @@ import {
   Reference,
   getChild,
   getParent,
-  uploadBytes,
+  uploadBytesResumable,
   uploadString,
   list,
   listAll,
@@ -89,7 +89,7 @@ export class ReferenceCompat implements types.Reference {
   ): types.UploadTask {
     this._throwIfRoot('put');
     return new UploadTaskCompat(
-      uploadBytes(this._delegate, data, metadata),
+      uploadBytesResumable(this._delegate, data, metadata),
       this
     );
   }

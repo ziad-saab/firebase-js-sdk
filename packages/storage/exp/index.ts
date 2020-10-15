@@ -29,7 +29,7 @@ import { name, version } from '../package.json';
 
 export { ref } from '../src/service';
 export {
-  uploadBytes,
+  uploadBytesResumable,
   uploadString,
   getMetadata,
   updateMetadata,

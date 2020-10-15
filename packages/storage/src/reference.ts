@@ -130,12 +130,12 @@ export class Reference {
  * @returns An UploadTask that lets you control and
  *     observe the upload.
  */
-export function uploadBytes(
+export function uploadBytesResumable(
   ref: Reference,
   data: Blob | Uint8Array | ArrayBuffer,
   metadata: Metadata | null = null
 ): UploadTask {
-  ref._throwIfRoot('uploadBytes');
+  ref._throwIfRoot('uploadBytesResumable');
   return new UploadTask(ref, new FbsBlob(data), metadata);
 }
 
