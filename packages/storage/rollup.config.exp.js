@@ -44,11 +44,18 @@ const plugins = [
 const browserBuilds = [
   {
     input: './exp/index.ts',
-    output: {
-      file: path.resolve('./exp', pkgExp.browser),
-      format: 'es',
-      sourcemap: true
-    },
+    output: [
+      {
+        file: path.resolve('./exp', pkgExp.main),
+        format: 'cjs',
+        sourcemap: true
+      },
+      {
+        file: path.resolve('./exp', pkgExp.browser),
+        format: 'es',
+        sourcemap: true
+      }
+    ],
     plugins,
     external: id => deps.some(dep => id === dep || id.startsWith(`${dep}/`)),
     treeshake: {
