@@ -177,12 +177,6 @@ describe('Firebase Storage > Service', () => {
       testShared.fakeAuthProvider,
       xhrIoPool
     );
-    it('Throws on non-URL arg', () => {
-      const error = testShared.assertThrows(() => {
-        service.refFromURL('path/to/child');
-      }, 'storage/invalid-argument');
-      expect(error.message).to.match(/invalid/i);
-    });
     it('Works with gs:// URLs', () => {
       const ref = service.refFromURL('gs://mybucket/child/path/image.png');
       expect(ref.toString()).to.equal('gs://mybucket/child/path/image.png');
@@ -251,9 +245,12 @@ GOOG4-RSA-SHA256`
     });
     describe('refFromURL', () => {
       it('Throws with a non-URL string arg', () => {
-        testShared.assertThrows(
+        const error = testShared.assertThrows(
           testShared.bind(service.refFromURL, service, 'child'),
           'storage/invalid-argument'
+        );
+        expect(error.message).to.match(
+          /expected a full URL but got a child path/i
         );
       });
       it('Throws with an invalid URL arg', () => {

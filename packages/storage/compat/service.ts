@@ -82,20 +82,10 @@ export class StorageServiceCompat implements types.FirebaseStorage {
   }
 
   setMaxUploadRetryTime(time: number): void {
-    if (time < 0) {
-      throw invalidArgument(
-        'Expected a non-negative argument for setMaxUploadRetryTime().'
-      );
-    }
     this._delegate.maxUploadRetryTime = time;
   }
 
   setMaxOperationRetryTime(time: number): void {
-    if (time < 0) {
-      throw invalidArgument(
-        'Expected a non-negative argument for setMaxOperationRetryTime().'
-      );
-    }
     this._delegate.maxOperationRetryTime = time;
   }
 }

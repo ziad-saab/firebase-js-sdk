@@ -19,7 +19,7 @@
  */
 
 import { FbsBlob } from './implementation/blob';
-import { FirebaseStorageError, Code, canceled } from './implementation/error';
+import { canceled, Code, FirebaseStorageError } from './implementation/error';
 import {
   InternalTaskState,
   TaskEvent,
@@ -30,7 +30,6 @@ import { Metadata } from './metadata';
 import {
   CompleteFn,
   ErrorFn,
-  NextFn,
   Observer,
   StorageObserver,
   Subscribe,
@@ -454,26 +453,11 @@ export class UploadTask {
     error?: ErrorFn,
     completed?: CompleteFn
   ): Unsubscribe | Subscribe<UploadTaskSnapshot> {
-    const self = this;
-
-    function makeBinder(): Subscribe<UploadTaskSnapshot> {
-      function binder(
-        nextOrObserver?:
-          | NextFn<UploadTaskSnapshot>
-          | StorageObserver<UploadTaskSnapshot>,
-        error?: ErrorFn,
-        complete?: CompleteFn
-      ): () => void {
-        const observer = new Observer(nextOrObserver, error, completed);
-        self._addObserver(observer);
-        return () => {
-          self._removeObserver(observer);
-        };
-      }
-      return binder;
-    }
-
-    return makeBinder()(nextOrObserver, error, completed);
+    const observer = new Observer(nextOrObserver, error, completed);
+    this._addObserver(observer);
+    return () => {
+      this._removeObserver(observer);
+    };
   }
 
   /**

@@ -34,6 +34,7 @@ import {
   appDeleted,
   noDefaultBucket
 } from './implementation/error';
+import { validateNumber } from './implementation/type';
 
 export function isUrl(path?: string): boolean {
   return /^[A-Za-z]+:\/\//.test(path as string);
@@ -127,8 +128,8 @@ export class StorageService implements _FirebaseService {
   protected readonly _appId: string | null = null;
   private readonly _requests: Set<Request<unknown>>;
   private _deleted: boolean = false;
-  maxOperationRetryTime: number;
-  maxUploadRetryTime: number;
+  private _maxOperationRetryTime: number;
+  private _maxUploadRetryTime: number;
 
   constructor(
     readonly app: FirebaseApp,
@@ -145,14 +146,42 @@ export class StorageService implements _FirebaseService {
      */
     readonly _url?: string
   ) {
-    this.maxOperationRetryTime = constants.DEFAULT_MAX_OPERATION_RETRY_TIME;
-    this.maxUploadRetryTime = constants.DEFAULT_MAX_UPLOAD_RETRY_TIME;
+    this._maxOperationRetryTime = constants.DEFAULT_MAX_OPERATION_RETRY_TIME;
+    this._maxUploadRetryTime = constants.DEFAULT_MAX_UPLOAD_RETRY_TIME;
     this._requests = new Set();
     if (_url != null) {
       this._bucket = Location.makeFromBucketSpec(_url);
     } else {
       this._bucket = extractBucket(this.app.options);
     }
+  }
+
+  get maxUploadRetryTime(): number {
+    return this._maxUploadRetryTime;
+  }
+
+  set maxUploadRetryTime(time: number) {
+    validateNumber(
+      'time',
+      /* minValue=*/ 0,
+      /* maxValue= */ Number.POSITIVE_INFINITY,
+      time
+    );
+    this._maxUploadRetryTime = time;
+  }
+
+  get maxOperationRetryTime(): number {
+    return this._maxOperationRetryTime;
+  }
+
+  set maxOperationRetryTime(time: number) {
+    validateNumber(
+      'time',
+      /* minValue=*/ 0,
+      /* maxValue= */ Number.POSITIVE_INFINITY,
+      time
+    );
+    this._maxOperationRetryTime = time;
   }
 
   async getAuthToken(): Promise<string | null> {

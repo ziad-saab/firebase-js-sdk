@@ -39,8 +39,7 @@ import {
   invalidRootOperation,
   noDownloadURL
 } from './implementation/error';
-
-const MAX_MAX_RESULTS = 1000;
+import { validateNumber } from './implementation/type';
 
 /**
  * Provides methods to interact with a bucket in the Firebase Storage service.
@@ -249,17 +248,13 @@ export async function list(
   options?: ListOptions | null
 ): Promise<ListResult> {
   if (options != null) {
-    if (options.maxResults != null) {
-      if (options.maxResults <= 0) {
-        throw invalidArgument(
-          'Expected options.maxResults to be a positive number.'
-        );
-      }
-      if (options.maxResults > MAX_MAX_RESULTS) {
-        throw invalidArgument(
-          `Expected options.maxResults to be less than or equal to ${MAX_MAX_RESULTS}.`
-        );
-      }
+    if (typeof options.maxResults === 'number') {
+      validateNumber(
+        'options.maxResults',
+        /* minValue= */ 1,
+        /* maxValue= */ 1000,
+        options.maxResults
+      );
     }
   }
   const authToken = await ref.service.getAuthToken();

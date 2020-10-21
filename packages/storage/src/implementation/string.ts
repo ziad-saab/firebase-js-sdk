@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { unknown, invalidFormat, invalidArgument } from './error';
+import { unknown, invalidFormat } from './error';
 
 /**
  * @enum {string}
@@ -27,28 +27,6 @@ export const StringFormat = {
   BASE64URL: 'base64url',
   DATA_URL: 'data_url'
 };
-
-export function formatValidator(stringFormat: unknown): void {
-  switch (stringFormat) {
-    case StringFormat.RAW:
-    case StringFormat.BASE64:
-    case StringFormat.BASE64URL:
-    case StringFormat.DATA_URL:
-      return;
-    default:
-      throw invalidArgument(
-        'Expected one of the event types: [' +
-          StringFormat.RAW +
-          ', ' +
-          StringFormat.BASE64 +
-          ', ' +
-          StringFormat.BASE64URL +
-          ', ' +
-          StringFormat.DATA_URL +
-          '].'
-      );
-  }
-}
 
 export class StringData {
   contentType: string | null;
