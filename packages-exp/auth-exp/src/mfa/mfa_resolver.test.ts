@@ -117,7 +117,7 @@ describe('core/mfa/mfa_resolver/MultiFactorResolver', () => {
           error = MultiFactorError._fromErrorAndOperation(
             auth,
             underlyingError,
-            OperationType.SIGN_IN,
+            OperationType.SIGN_IN
           );
           resolver = MultiFactorResolver._fromError(auth, error);
         });
@@ -194,7 +194,7 @@ describe('core/mfa/mfa_resolver/MultiFactorResolver', () => {
         error = MultiFactorError._fromErrorAndOperation(
           auth,
           underlyingError,
-          OperationType.SIGN_IN,
+          OperationType.SIGN_IN
         );
       });
       it('can be used to obtain a resolver', () => {

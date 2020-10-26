@@ -44,7 +44,8 @@ const MODE_TO_OPERATION_MAP: { [key: string]: externs.ActionCodeOperation } = {
   'signIn': externs.ActionCodeOperation.EMAIL_SIGNIN,
   'verifyEmail': externs.ActionCodeOperation.VERIFY_EMAIL,
   'verifyAndChangeEmail': externs.ActionCodeOperation.VERIFY_AND_CHANGE_EMAIL,
-  'revertSecondFactorAddition': externs.ActionCodeOperation.REVERT_SECOND_FACTOR_ADDITION
+  'revertSecondFactorAddition':
+    externs.ActionCodeOperation.REVERT_SECOND_FACTOR_ADDITION
 };
 
 /**
