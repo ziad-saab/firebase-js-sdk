@@ -7,14 +7,14 @@
 <b>Signature:</b>
 
 ```typescript
-credential(params: CredentialParameters): externs.OAuthCredential;
+credential(params: OAuthCredentialOptions): externs.OAuthCredential;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | CredentialParameters |  |
+|  params | OAuthCredentialOptions |  |
 
 <b>Returns:</b>
 

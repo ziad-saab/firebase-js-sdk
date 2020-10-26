@@ -22,7 +22,8 @@
 
 |  Enumeration | Description |
 |  --- | --- |
-|  [Operation](./auth-types.operation.md) | An enumeration of the possible email action types. |
+|  [ActionCodeOperation](./auth-types.actioncodeoperation.md) | An enumeration of the possible email action types. |
+|  [FactorId](./auth-types.factorid.md) | An enum of factors that may be used for multifactor authentication. |
 |  [OperationType](./auth-types.operationtype.md) | Supported operation types. |
 |  [ProviderId](./auth-types.providerid.md) | Supported providers. |
 |  [SignInMethod](./auth-types.signinmethod.md) | Supported sign-in methods. |
@@ -66,5 +67,4 @@
 |  --- | --- |
 |  [NextOrObserver](./auth-types.nextorobserver.md) | Type definition for an event callback. |
 |  [PhoneInfoOptions](./auth-types.phoneinfooptions.md) | The information required to verify the ownership of a phone number. The information that's required depends on whether you are doing single-factor sign-in, multi-factor enrollment or multi-factor sign-in. |
-|  [UserProfile](./auth-types.userprofile.md) | User profile used in [AdditionalUserInfo](./auth-types.additionaluserinfo.md)<!-- -->. |
 
