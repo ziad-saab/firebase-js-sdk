@@ -18,7 +18,7 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import { ProviderId } from '@firebase/auth-types-exp';
+import { FactorId } from '@firebase/auth-types-exp';
 
 import { mockEndpoint } from '../../../../test/helpers/api/helper';
 import { testAuth, TestAuth } from '../../../../test/helpers/mock_auth';
@@ -140,7 +140,7 @@ describe('core/mfa/phone/PhoneMultiFactorGenerator', () => {
 
     it('can be used to create an assertion', () => {
       const assertion = PhoneMultiFactorGenerator.assertion(credential);
-      expect(assertion.factorId).to.eq(ProviderId.PHONE);
+      expect(assertion.factorId).to.eq(FactorId.PHONE);
     });
   });
 });

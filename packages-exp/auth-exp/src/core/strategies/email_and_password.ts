@@ -35,7 +35,7 @@ export async function sendPasswordResetEmail(
   actionCodeSettings?: externs.ActionCodeSettings
 ): Promise<void> {
   const request: authentication.PasswordResetRequest = {
-    requestType: externs.Operation.PASSWORD_RESET,
+    requestType: externs.ActionCodeOperation.PASSWORD_RESET,
     email
   };
   if (actionCodeSettings) {
@@ -79,14 +79,14 @@ export async function checkActionCode(
   const operation = response.requestType;
   assert(operation, AuthErrorCode.INTERNAL_ERROR, { appName: auth.name });
   switch (operation) {
-    case externs.Operation.EMAIL_SIGNIN:
+    case externs.ActionCodeOperation.EMAIL_SIGNIN:
       break;
-    case externs.Operation.VERIFY_AND_CHANGE_EMAIL:
+    case externs.ActionCodeOperation.VERIFY_AND_CHANGE_EMAIL:
       assert(response.newEmail, AuthErrorCode.INTERNAL_ERROR, {
         appName: auth.name
       });
       break;
-    case externs.Operation.REVERT_SECOND_FACTOR_ADDITION:
+    case externs.ActionCodeOperation.REVERT_SECOND_FACTOR_ADDITION:
       assert(response.mfaInfo, AuthErrorCode.INTERNAL_ERROR, {
         appName: auth.name
       });
@@ -109,11 +109,11 @@ export async function checkActionCode(
   return {
     data: {
       email:
-        (response.requestType === externs.Operation.VERIFY_AND_CHANGE_EMAIL
+        (response.requestType === externs.ActionCodeOperation.VERIFY_AND_CHANGE_EMAIL
           ? response.newEmail
           : response.email) || null,
       previousEmail:
-        (response.requestType === externs.Operation.VERIFY_AND_CHANGE_EMAIL
+        (response.requestType === externs.ActionCodeOperation.VERIFY_AND_CHANGE_EMAIL
           ? response.email
           : response.newEmail) || null,
       multiFactorInfo

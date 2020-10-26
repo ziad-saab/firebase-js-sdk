@@ -26,10 +26,8 @@ import { testAuth, testUser, TestAuth } from '../../test/helpers/mock_auth';
 import * as mockFetch from '../../test/helpers/mock_fetch';
 import { Endpoint } from '../api';
 import { APIUserInfo } from '../api/account_management/account';
-import { AuthCredential } from '../core/credentials';
 import { PhoneAuthCredential } from '../core/credentials/phone';
 import { AUTH_ERROR_FACTORY, AuthErrorCode } from '../core/errors';
-import { EmailAuthProvider } from '../core/providers/email';
 import { User, UserCredential } from '../model/user';
 import { MultiFactorAssertion } from './mfa_assertion';
 import { PhoneMultiFactorAssertion } from '../platform_browser/mfa/assertions/phone';
@@ -42,15 +40,10 @@ describe('core/mfa/mfa_resolver/MultiFactorResolver', () => {
   let auth: TestAuth;
   let underlyingError: FirebaseError;
   let error: MultiFactorError;
-  let primaryFactorCredential: AuthCredential;
 
   beforeEach(async () => {
     auth = await testAuth();
     auth.tenantId = 'tenant-id';
-    primaryFactorCredential = EmailAuthProvider.credential(
-      'email',
-      'password'
-    ) as AuthCredential;
     underlyingError = AUTH_ERROR_FACTORY.create(AuthErrorCode.MFA_REQUIRED, {
       appName: auth.name,
       serverResponse: {
@@ -121,11 +114,10 @@ describe('core/mfa/mfa_resolver/MultiFactorResolver', () => {
 
       context('sign in', () => {
         beforeEach(() => {
-          error = MultiFactorError._fromErrorAndCredential(
+          error = MultiFactorError._fromErrorAndOperation(
             auth,
             underlyingError,
             OperationType.SIGN_IN,
-            primaryFactorCredential
           );
           resolver = MultiFactorResolver._fromError(auth, error);
         });
@@ -160,11 +152,10 @@ describe('core/mfa/mfa_resolver/MultiFactorResolver', () => {
 
         beforeEach(() => {
           user = testUser(auth, 'local-id', undefined, true);
-          error = MultiFactorError._fromErrorAndCredential(
+          error = MultiFactorError._fromErrorAndOperation(
             auth,
             underlyingError,
             OperationType.REAUTHENTICATE,
-            primaryFactorCredential,
             user
           );
           resolver = MultiFactorResolver._fromError(auth, error);
@@ -200,11 +191,10 @@ describe('core/mfa/mfa_resolver/MultiFactorResolver', () => {
   describe('getMultiFactorResolver', () => {
     context('sign in', () => {
       beforeEach(() => {
-        error = MultiFactorError._fromErrorAndCredential(
+        error = MultiFactorError._fromErrorAndOperation(
           auth,
           underlyingError,
           OperationType.SIGN_IN,
-          primaryFactorCredential
         );
       });
       it('can be used to obtain a resolver', () => {
@@ -218,11 +208,10 @@ describe('core/mfa/mfa_resolver/MultiFactorResolver', () => {
 
       beforeEach(() => {
         user = testUser(auth, 'local-id', undefined, true);
-        error = MultiFactorError._fromErrorAndCredential(
+        error = MultiFactorError._fromErrorAndOperation(
           auth,
           underlyingError,
           OperationType.REAUTHENTICATE,
-          primaryFactorCredential,
           user
         );
       });

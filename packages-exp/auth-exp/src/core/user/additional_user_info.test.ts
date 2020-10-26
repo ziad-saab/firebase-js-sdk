@@ -20,7 +20,6 @@ import { expect } from 'chai';
 import {
   OperationType,
   ProviderId,
-  UserProfile
 } from '@firebase/auth-types-exp';
 
 import { IdTokenResponse, IdTokenResponseKind } from '../../model/id_token';
@@ -35,13 +34,13 @@ import { User, UserCredential } from '../../model/user';
 import { testAuth, testUser } from '../../../test/helpers/mock_auth';
 
 describe('core/user/additional_user_info', () => {
-  const userProfileWithLogin: UserProfile = {
+  const userProfileWithLogin: Record<string, unknown> = {
     login: 'scott',
     friends: [],
     netWorth: 5.0
   };
   const rawUserInfoWithLogin = JSON.stringify(userProfileWithLogin);
-  const userProfileNoLogin: UserProfile = { sample: 'data' };
+  const userProfileNoLogin: Record<string, unknown> = { sample: 'data' };
   const rawUserInfoNoLogin = JSON.stringify(userProfileNoLogin);
   describe('_fromIdTokenResponse', () => {
     describe('parses federated IDP response tokens', () => {

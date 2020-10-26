@@ -112,9 +112,6 @@ export function getMultiFactorResolver(
   assert(error.operationType, AuthErrorCode.ARGUMENT_ERROR, {
     appName: auth.name
   });
-  assert(error.credential, AuthErrorCode.ARGUMENT_ERROR, {
-    appName: auth.name
-  });
   assert(
     error.serverResponse?.mfaPendingCredential,
     AuthErrorCode.ARGUMENT_ERROR,

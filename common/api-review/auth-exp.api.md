@@ -28,7 +28,7 @@ export class ActionCodeURL implements externs.ActionCodeURL {
     // (undocumented)
     readonly languageCode: string | null;
     // (undocumented)
-    readonly operation: externs.Operation;
+    readonly operation: externs.ActionCodeOperation;
     // (undocumented)
     static parseLink(link: string): externs.ActionCodeURL | null;
     // (undocumented)
@@ -247,10 +247,10 @@ export class OAuthProvider implements externs.AuthProvider {
     constructor(providerId: string);
     // (undocumented)
     addScope(scope: string): externs.AuthProvider;
-    // Warning: (ae-forgotten-export) The symbol "CredentialParameters" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "OAuthCredentialOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    credential(params: CredentialParameters): externs.OAuthCredential;
+    credential(params: OAuthCredentialOptions): externs.OAuthCredential;
     // (undocumented)
     static credentialFromJSON(json: object | string): externs.OAuthCredential;
     // (undocumented)

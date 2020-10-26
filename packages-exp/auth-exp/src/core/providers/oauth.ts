@@ -24,7 +24,7 @@ import { OAuthCredential } from '../credentials/oauth';
 
 export type CustomParameters = Record<string, string>;
 
-interface CredentialParameters {
+export interface OAuthCredentialOptions {
   idToken?: string;
   accessToken?: string;
   rawNonce?: string;
@@ -46,7 +46,7 @@ export class OAuthProvider implements externs.AuthProvider {
     return OAuthCredential._fromParams(obj);
   }
 
-  credential(params: CredentialParameters): externs.OAuthCredential {
+  credential(params: OAuthCredentialOptions): externs.OAuthCredential {
     assert(
       params.idToken && params.accessToken,
       AuthErrorCode.ARGUMENT_ERROR,

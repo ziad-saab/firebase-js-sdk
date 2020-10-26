@@ -38,13 +38,13 @@ enum QueryField {
  *
  * @internal
  */
-const MODE_TO_OPERATION_MAP: { [key: string]: externs.Operation } = {
-  'recoverEmail': externs.Operation.RECOVER_EMAIL,
-  'resetPassword': externs.Operation.PASSWORD_RESET,
-  'signIn': externs.Operation.EMAIL_SIGNIN,
-  'verifyEmail': externs.Operation.VERIFY_EMAIL,
-  'verifyAndChangeEmail': externs.Operation.VERIFY_AND_CHANGE_EMAIL,
-  'revertSecondFactorAddition': externs.Operation.REVERT_SECOND_FACTOR_ADDITION
+const MODE_TO_OPERATION_MAP: { [key: string]: externs.ActionCodeOperation } = {
+  'recoverEmail': externs.ActionCodeOperation.RECOVER_EMAIL,
+  'resetPassword': externs.ActionCodeOperation.PASSWORD_RESET,
+  'signIn': externs.ActionCodeOperation.EMAIL_SIGNIN,
+  'verifyEmail': externs.ActionCodeOperation.VERIFY_EMAIL,
+  'verifyAndChangeEmail': externs.ActionCodeOperation.VERIFY_AND_CHANGE_EMAIL,
+  'revertSecondFactorAddition': externs.ActionCodeOperation.REVERT_SECOND_FACTOR_ADDITION
 };
 
 /**
@@ -53,7 +53,7 @@ const MODE_TO_OPERATION_MAP: { [key: string]: externs.Operation } = {
  * @param mode
  * @internal
  */
-function parseMode(mode: string | null): externs.Operation | null {
+function parseMode(mode: string | null): externs.ActionCodeOperation | null {
   return mode ? MODE_TO_OPERATION_MAP[mode] || null : null;
 }
 
@@ -91,7 +91,7 @@ export class ActionCodeURL implements externs.ActionCodeURL {
   /** {@inheritDoc @firebase/auth-types-exp#ActionCodeURL.languageCode} */
   readonly languageCode: string | null;
   /** {@inheritDoc @firebase/auth-types-exp#ActionCodeURL.operation} */
-  readonly operation: externs.Operation;
+  readonly operation: externs.ActionCodeOperation;
   /** {@inheritDoc @firebase/auth-types-exp#ActionCodeURL.tenantId} */
   readonly tenantId: string | null;
 
