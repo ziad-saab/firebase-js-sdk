@@ -57,7 +57,7 @@ function factory(container: ComponentContainer, url?: string): StorageService {
   ) as unknown) as StorageService;
 }
 
-export function registerStorage(): void {
+function registerStorage(): void {
   _registerComponent(
     new Component(
       STORAGE_TYPE,

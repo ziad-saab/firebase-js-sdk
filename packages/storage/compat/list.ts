@@ -18,15 +18,23 @@
 import * as types from '@firebase/storage-types';
 import { ListResult } from '../src/list';
 import { ReferenceCompat } from './reference';
-import { Reference } from '../src/reference';
+import { StorageServiceCompat } from './service';
 
 export class ListResultCompat implements types.ListResult {
   constructor(
     private readonly _delegate: ListResult,
-    private _referenceConverter: (ref: Reference) => ReferenceCompat
+    private _service: StorageServiceCompat
   ) {}
 
-  prefixes = this._delegate.prefixes.map(v => this._referenceConverter(v));
-  items = this._delegate.items.map(v => this._referenceConverter(v));
-  nextPageToken = this._delegate.nextPageToken || null;
+  get prefixes(): ReferenceCompat[] {
+    return this._delegate.prefixes.map(
+      v => new ReferenceCompat(v, this._service)
+    );
+  }
+  get items(): ReferenceCompat[] {
+    return this._delegate.items.map(v => new ReferenceCompat(v, this._service));
+  }
+  get nextPageToken(): string | null {
+    return this._delegate.nextPageToken || null;
+  }
 }

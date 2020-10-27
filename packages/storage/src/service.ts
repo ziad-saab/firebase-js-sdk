@@ -54,7 +54,7 @@ function refFromURL(service: StorageService, url: string): Reference {
 function refFromPath(
   ref: StorageService | Reference,
   path?: string
-): Reference | null {
+): Reference {
   if (ref instanceof StorageService) {
     const service = ref;
     if (service._bucket == null) {

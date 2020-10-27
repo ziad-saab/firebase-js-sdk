@@ -18,7 +18,6 @@
 import {
   Reference,
   getChild,
-  getParent,
   uploadBytesResumable,
   uploadString,
   list,
@@ -43,9 +42,17 @@ export class ReferenceCompat implements types.Reference {
     public storage: StorageServiceCompat
   ) {}
 
-  name = this._delegate.name;
-  bucket = this._delegate.bucket;
-  fullPath = this._delegate.fullPath;
+  get name(): string {
+    return this._delegate.name;
+  }
+
+  get bucket(): string {
+    return this._delegate.bucket;
+  }
+
+  get fullPath(): string {
+    return this._delegate.fullPath;
+  }
 
   toString(): string {
     return this._delegate.toString();
@@ -70,7 +77,7 @@ export class ReferenceCompat implements types.Reference {
    * current object, or null if the current object is the root.
    */
   get parent(): types.Reference | null {
-    const reference = getParent(this._delegate);
+    const reference = this._delegate.parent;
     if (reference == null) {
       return null;
     }
@@ -132,8 +139,7 @@ export class ReferenceCompat implements types.Reference {
    */
   listAll(): Promise<types.ListResult> {
     return listAll(this._delegate).then(
-      r =>
-        new ListResultCompat(r, ref => new ReferenceCompat(ref, this.storage))
+      r => new ListResultCompat(r, this.storage)
     );
   }
 
@@ -158,8 +164,7 @@ export class ReferenceCompat implements types.Reference {
    */
   list(options?: ListOptions | null): Promise<types.ListResult> {
     return list(this._delegate, options).then(
-      r =>
-        new ListResultCompat(r, ref => new ReferenceCompat(ref, this.storage))
+      r => new ListResultCompat(r, this.storage)
     );
   }
 

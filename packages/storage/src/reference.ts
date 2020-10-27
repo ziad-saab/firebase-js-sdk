@@ -57,13 +57,8 @@ export class Reference {
    * @internal
    */
   location: Location;
-  /**
-   * @internal
-   */
-  service: StorageService;
 
-  constructor(service: StorageService, location: string | Location) {
-    this.service = service;
+  constructor(private _service: StorageService, location: string | Location) {
     if (location instanceof Location) {
       this.location = location;
     } else {
@@ -90,7 +85,7 @@ export class Reference {
    */
   get root(): Reference {
     const location = new Location(this.location.bucket, '');
-    return this.newRef(this.service, location);
+    return this.newRef(this._service, location);
   }
 
   get bucket(): string {
@@ -106,11 +101,16 @@ export class Reference {
   }
 
   get storage(): StorageService {
-    return this.service;
+    return this._service;
   }
 
   get parent(): Reference | null {
-    return getParent(this);
+    const newPath = parent(this.location.path);
+    if (newPath === null) {
+      return null;
+    }
+    const location = new Location(this.location.bucket, newPath);
+    return new Reference(this._service, location);
   }
 
   _throwIfRoot(name: string): void {
@@ -257,16 +257,16 @@ export async function list(
       );
     }
   }
-  const authToken = await ref.service.getAuthToken();
+  const authToken = await ref.storage.getAuthToken();
   const op = options || {};
   const requestInfo = requestsList(
-    ref.service,
+    ref.storage,
     ref.location,
     /*delimiter= */ '/',
     op.pageToken,
     op.maxResults
   );
-  return ref.service.makeRequest(requestInfo, authToken).getPromise();
+  return ref.storage.makeRequest(requestInfo, authToken).getPromise();
 }
 
 /**
@@ -278,13 +278,13 @@ export async function list(
  */
 export async function getMetadata(ref: Reference): Promise<Metadata> {
   ref._throwIfRoot('getMetadata');
-  const authToken = await ref.service.getAuthToken();
+  const authToken = await ref.storage.getAuthToken();
   const requestInfo = requestsGetMetadata(
-    ref.service,
+    ref.storage,
     ref.location,
     getMappings()
   );
-  return ref.service.makeRequest(requestInfo, authToken).getPromise();
+  return ref.storage.makeRequest(requestInfo, authToken).getPromise();
 }
 
 /**
@@ -303,30 +303,31 @@ export async function updateMetadata(
   metadata: Metadata
 ): Promise<Metadata> {
   ref._throwIfRoot('updateMetadata');
-  const authToken = await ref.service.getAuthToken();
+  const authToken = await ref.storage.getAuthToken();
   const requestInfo = requestsUpdateMetadata(
-    ref.service,
+    ref.storage,
     ref.location,
     metadata,
     getMappings()
   );
-  return ref.service.makeRequest(requestInfo, authToken).getPromise();
+  return ref.storage.makeRequest(requestInfo, authToken).getPromise();
 }
 
 /**
+ * Returns the download URL for the given Reference.
  * @public
  * @returns A promise that resolves with the download
  *     URL for this object.
  */
 export async function getDownloadURL(ref: Reference): Promise<string> {
   ref._throwIfRoot('getDownloadURL');
-  const authToken = await ref.service.getAuthToken();
+  const authToken = await ref.storage.getAuthToken();
   const requestInfo = requestsGetDownloadUrl(
-    ref.service,
+    ref.storage,
     ref.location,
     getMappings()
   );
-  return ref.service
+  return ref.storage
     .makeRequest(requestInfo, authToken)
     .getPromise()
     .then(url => {
@@ -345,9 +346,9 @@ export async function getDownloadURL(ref: Reference): Promise<string> {
  */
 export async function deleteObject(ref: Reference): Promise<void> {
   ref._throwIfRoot('deleteObject');
-  const authToken = await ref.service.getAuthToken();
-  const requestInfo = requestsDeleteObject(ref.service, ref.location);
-  return ref.service.makeRequest(requestInfo, authToken).getPromise();
+  const authToken = await ref.storage.getAuthToken();
+  const requestInfo = requestsDeleteObject(ref.storage, ref.location);
+  return ref.storage.makeRequest(requestInfo, authToken).getPromise();
 }
 
 /**
@@ -363,19 +364,5 @@ export async function deleteObject(ref: Reference): Promise<void> {
 export function getChild(ref: Reference, childPath: string): Reference {
   const newPath = child(ref.location.path, childPath);
   const location = new Location(ref.location.bucket, newPath);
-  return new Reference(ref.service, location);
-}
-/**
- * @internal
- * @param ref - Storage Reference to get parent of.
- * @returns A reference to the parent of the
- * current object, or null if the current object is the root.
- */
-export function getParent(ref: Reference): Reference | null {
-  const newPath = parent(ref.location.path);
-  if (newPath === null) {
-    return null;
-  }
-  const location = new Location(ref.location.bucket, newPath);
-  return new Reference(ref.service, location);
+  return new Reference(ref.storage, location);
 }

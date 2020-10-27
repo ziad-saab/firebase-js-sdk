@@ -27,7 +27,6 @@ import {
   list,
   getMetadata,
   updateMetadata,
-  getParent as parentReference,
   getDownloadURL
 } from '../../src/reference';
 import { StorageService, ref } from '../../src/service';
@@ -113,14 +112,14 @@ describe('Firebase Storage > Reference', () => {
 
   describe('parentReference', () => {
     it('Returns null at root', () => {
-      expect(parentReference(root)).to.be.null;
+      expect(root.parent).to.be.null;
     });
     it('Returns root one level down', () => {
-      expect(parentReference(child)!.toString()).to.equal('gs://test-bucket/');
+      expect(child.parent!.toString()).to.equal('gs://test-bucket/');
     });
     it('Works correctly with empty levels', () => {
       const s = makeStorage('gs://test-bucket/a///');
-      expect(parentReference(s)!.toString()).to.equal('gs://test-bucket/a/');
+      expect(s.parent!.toString()).to.equal('gs://test-bucket/a/');
     });
   });
 

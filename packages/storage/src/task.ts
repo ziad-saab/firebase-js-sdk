@@ -70,14 +70,14 @@ export class UploadTask {
    * @internal
    */
   _state: InternalTaskState;
-  private _error: FirebaseStorageError | null = null;
-  private _uploadUrl: string | null = null;
-  private _request: Request<unknown> | null = null;
+  private _error?: FirebaseStorageError = undefined;
+  private _uploadUrl?: string = undefined;
+  private _request?: Request<unknown> = undefined;
   private _chunkMultiplier: number = 1;
   private _errorHandler: (p1: FirebaseStorageError) => void;
   private _metadataErrorHandler: (p1: FirebaseStorageError) => void;
-  private _resolve: ((p1: UploadTaskSnapshot) => void) | null = null;
-  private _reject: ((p1: FirebaseStorageError) => void) | null = null;
+  private _resolve?: (p1: UploadTaskSnapshot) => void = undefined;
+  private _reject?: (p1: FirebaseStorageError) => void = undefined;
   private _promise: Promise<UploadTaskSnapshot>;
 
   /**
@@ -93,7 +93,7 @@ export class UploadTask {
     this._resumable = this._shouldDoResumable(this._blob);
     this._state = InternalTaskState.RUNNING;
     this._errorHandler = error => {
-      this._request = null;
+      this._request = undefined;
       this._chunkMultiplier = 1;
       if (error.codeEquals(Code.CANCELED)) {
         this._needToFetchStatus = true;
@@ -104,7 +104,7 @@ export class UploadTask {
       }
     };
     this._metadataErrorHandler = error => {
-      this._request = null;
+      this._request = undefined;
       if (error.codeEquals(Code.CANCELED)) {
         this.completeTransitions_();
       } else {
@@ -137,11 +137,11 @@ export class UploadTask {
       // This can happen if someone pauses us in a resume callback, for example.
       return;
     }
-    if (this._request !== null) {
+    if (this._request !== undefined) {
       return;
     }
     if (this._resumable) {
-      if (this._uploadUrl === null) {
+      if (this._uploadUrl === undefined) {
         this._createResumable();
       } else {
         if (this._needToFetchStatus) {
@@ -162,7 +162,7 @@ export class UploadTask {
 
   private _resolveToken(callback: (p1: string | null) => void): void {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    this._ref.service.getAuthToken().then(authToken => {
+    this._ref.storage.getAuthToken().then(authToken => {
       switch (this._state) {
         case InternalTaskState.RUNNING:
           callback(authToken);
@@ -183,19 +183,19 @@ export class UploadTask {
   private _createResumable(): void {
     this._resolveToken(authToken => {
       const requestInfo = fbsRequests.createResumableUpload(
-        this._ref.service,
+        this._ref.storage,
         this._ref.location,
         this._mappings,
         this._blob,
         this._metadata
       );
-      const createRequest = this._ref.service.makeRequest(
+      const createRequest = this._ref.storage.makeRequest(
         requestInfo,
         authToken
       );
       this._request = createRequest;
       createRequest.getPromise().then((url: string) => {
-        this._request = null;
+        this._request = undefined;
         this._uploadUrl = url;
         this._needToFetchStatus = false;
         this.completeTransitions_();
@@ -208,19 +208,19 @@ export class UploadTask {
     const url = this._uploadUrl as string;
     this._resolveToken(authToken => {
       const requestInfo = fbsRequests.getResumableUploadStatus(
-        this._ref.service,
+        this._ref.storage,
         this._ref.location,
         url,
         this._blob
       );
-      const statusRequest = this._ref.service.makeRequest(
+      const statusRequest = this._ref.storage.makeRequest(
         requestInfo,
         authToken
       );
       this._request = statusRequest;
       statusRequest.getPromise().then(status => {
         status = status as fbsRequests.ResumableUploadStatus;
-        this._request = null;
+        this._request = undefined;
         this._updateProgress(status.current);
         this._needToFetchStatus = false;
         if (status.finalized) {
@@ -246,7 +246,7 @@ export class UploadTask {
       try {
         requestInfo = fbsRequests.continueResumableUpload(
           this._ref.location,
-          this._ref.service,
+          this._ref.storage,
           url,
           this._blob,
           chunkSize,
@@ -259,7 +259,7 @@ export class UploadTask {
         this._transition(InternalTaskState.ERROR);
         return;
       }
-      const uploadRequest = this._ref.service.makeRequest(
+      const uploadRequest = this._ref.storage.makeRequest(
         requestInfo,
         authToken
       );
@@ -268,7 +268,7 @@ export class UploadTask {
         .getPromise()
         .then((newStatus: fbsRequests.ResumableUploadStatus) => {
           this._increaseMultiplier();
-          this._request = null;
+          this._request = undefined;
           this._updateProgress(newStatus.current);
           if (newStatus.finalized) {
             this._metadata = newStatus.metadata;
@@ -293,17 +293,17 @@ export class UploadTask {
   private _fetchMetadata(): void {
     this._resolveToken(authToken => {
       const requestInfo = fbsRequests.getMetadata(
-        this._ref.service,
+        this._ref.storage,
         this._ref.location,
         this._mappings
       );
-      const metadataRequest = this._ref.service.makeRequest(
+      const metadataRequest = this._ref.storage.makeRequest(
         requestInfo,
         authToken
       );
       this._request = metadataRequest;
       metadataRequest.getPromise().then(metadata => {
-        this._request = null;
+        this._request = undefined;
         this._metadata = metadata;
         this._transition(InternalTaskState.SUCCESS);
       }, this._metadataErrorHandler);
@@ -313,19 +313,19 @@ export class UploadTask {
   private _oneShotUpload(): void {
     this._resolveToken(authToken => {
       const requestInfo = fbsRequests.multipartUpload(
-        this._ref.service,
+        this._ref.storage,
         this._ref.location,
         this._mappings,
         this._blob,
         this._metadata
       );
-      const multipartRequest = this._ref.service.makeRequest(
+      const multipartRequest = this._ref.storage.makeRequest(
         requestInfo,
         authToken
       );
       this._request = multipartRequest;
       multipartRequest.getPromise().then(metadata => {
-        this._request = null;
+        this._request = undefined;
         this._metadata = metadata;
         this._updateProgress(this._blob.size());
         this._transition(InternalTaskState.SUCCESS);
@@ -355,7 +355,7 @@ export class UploadTask {
         // assert(this.state_ === InternalTaskState.RUNNING ||
         //        this.state_ === InternalTaskState.PAUSING);
         this._state = state;
-        if (this._request !== null) {
+        if (this._request !== undefined) {
           this._request.cancel();
         }
         break;
@@ -363,7 +363,7 @@ export class UploadTask {
         // TODO(andysoto):
         // assert(this.state_ === InternalTaskState.RUNNING);
         this._state = state;
-        if (this._request !== null) {
+        if (this._request !== undefined) {
           this._request.cancel();
         }
         break;
@@ -514,7 +514,7 @@ export class UploadTask {
   }
 
   private _finishPromise(): void {
-    if (this._resolve !== null) {
+    if (this._resolve !== undefined) {
       let triggered = true;
       switch (taskStateFromInternalTaskState(this._state)) {
         case TaskState.SUCCESS:
@@ -530,8 +530,8 @@ export class UploadTask {
           break;
       }
       if (triggered) {
-        this._resolve = null;
-        this._reject = null;
+        this._resolve = undefined;
+        this._reject = undefined;
       }
     }
   }

@@ -34,11 +34,6 @@ export class StorageServiceCompat implements types.FirebaseStorage {
     private _referenceConverter: (ref: Reference) => ReferenceCompat
   ) {}
 
-  maxOperationRetryTime = this._delegate.maxOperationRetryTime;
-  maxUploadRetryTime = this._delegate.maxUploadRetryTime;
-  /**
-   * @internal
-   */
   INTERNAL = {
     /**
      * Called when the associated app is deleted.
@@ -47,6 +42,14 @@ export class StorageServiceCompat implements types.FirebaseStorage {
       return this._delegate._delete();
     }
   };
+
+  get maxOperationRetryTime(): number {
+    return this._delegate.maxOperationRetryTime;
+  }
+
+  get maxUploadRetryTime(): number {
+    return this._delegate.maxUploadRetryTime;
+  }
 
   /**
    * Returns a firebaseStorage.Reference for the given path in the default
