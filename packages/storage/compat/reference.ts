@@ -139,7 +139,8 @@ export class ReferenceCompat implements types.Reference {
    */
   listAll(): Promise<types.ListResult> {
     return listAll(this._delegate).then(
-      r => new ListResultCompat(r, this.storage)
+      r =>
+        new ListResultCompat(r, ref => new ReferenceCompat(ref, this.storage))
     );
   }
 
@@ -164,7 +165,8 @@ export class ReferenceCompat implements types.Reference {
    */
   list(options?: ListOptions | null): Promise<types.ListResult> {
     return list(this._delegate, options).then(
-      r => new ListResultCompat(r, this.storage)
+      r =>
+        new ListResultCompat(r, ref => new ReferenceCompat(ref, this.storage))
     );
   }
 
