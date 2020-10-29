@@ -21,7 +21,10 @@ export class FirebaseStorageError extends FirebaseError {
   customData: { serverResponse: string | null } = { serverResponse: null };
 
   constructor(code: Code, message: string) {
-    super(prependCode(code), 'Firebase Storage: ' + message);
+    super(
+      prependCode(code),
+      `Firebase Storage: ${message} (${prependCode(code)})`
+    );
     // Without this, `instanceof FirebaseStorageError`, in tests for example,
     // returns false.
     Object.setPrototypeOf(this, FirebaseStorageError.prototype);
@@ -33,7 +36,7 @@ export class FirebaseStorageError extends FirebaseError {
 
   get message(): string {
     if (this.customData.serverResponse) {
-      return this.message + '\n' + this.customData.serverResponse;
+      return `${this.message}\n${this.customData.serverResponse}`;
     } else {
       return this.message;
     }
@@ -79,7 +82,8 @@ export const Code = {
   APP_DELETED: 'app-deleted',
   INVALID_ROOT_OPERATION: 'invalid-root-operation',
   INVALID_FORMAT: 'invalid-format',
-  INTERNAL_ERROR: 'internal-error'
+  INTERNAL_ERROR: 'internal-error',
+  UNSUPPORTED_ENVIRONMENT: 'unsupported-environment'
 };
 
 export function prependCode(code: Code): string {
@@ -221,15 +225,30 @@ export function noDownloadURL(): FirebaseStorageError {
   );
 }
 
+export function invalidArgument(message: string): FirebaseStorageError;
 export function invalidArgument(
   index: number,
   fnName: string,
   message: string
+): FirebaseStorageError;
+export function invalidArgument(
+  indexOrMessage: number | string,
+  fnName?: string,
+  message?: string
 ): FirebaseStorageError {
-  return new FirebaseStorageError(
-    Code.INVALID_ARGUMENT,
-    'Invalid argument in `' + fnName + '` at index ' + index + ': ' + message
-  );
+  if (typeof indexOrMessage === 'string') {
+    return new FirebaseStorageError(Code.INVALID_ARGUMENT, indexOrMessage);
+  } else {
+    return new FirebaseStorageError(
+      Code.INVALID_ARGUMENT,
+      'Invalid argument in `' +
+        fnName +
+        '` at index ' +
+        indexOrMessage +
+        ': ' +
+        message
+    );
+  }
 }
 
 export function invalidArgumentCount(
