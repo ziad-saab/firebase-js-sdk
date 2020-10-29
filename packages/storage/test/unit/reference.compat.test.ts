@@ -37,8 +37,7 @@ function makeFakeService(
 ): StorageServiceCompat {
   const storageServiceCompat: StorageServiceCompat = new StorageServiceCompat(
     app,
-    new StorageService(app, authProvider, testShared.makePool(sendHook)),
-    ref => new ReferenceCompat(ref, storageServiceCompat)
+    new StorageService(app, authProvider, testShared.makePool(sendHook))
   );
   return storageServiceCompat;
 }
@@ -51,8 +50,7 @@ function makeStorage(url: string): ReferenceCompat {
   );
   const storageServiceCompat: StorageServiceCompat = new StorageServiceCompat(
     {} as FirebaseApp,
-    service,
-    ref => new ReferenceCompat(ref, storageServiceCompat)
+    service
   );
   return new ReferenceCompat(new Reference(service, url), storageServiceCompat);
 }

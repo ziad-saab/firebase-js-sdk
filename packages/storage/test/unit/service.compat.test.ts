@@ -22,7 +22,6 @@ import * as testShared from './testshared';
 import { DEFAULT_HOST } from '../../src/implementation/constants';
 import { FirebaseStorageError } from '../../src/implementation/error';
 import { StorageService } from '../../src/service';
-import { ReferenceCompat } from '../../compat/reference';
 import { FirebaseApp } from '@firebase/app-types';
 import { Provider } from '@firebase/component';
 import { FirebaseAuthInternalName } from '@firebase/auth-interop-types';
@@ -44,8 +43,7 @@ function makeService(
 ): StorageServiceCompat {
   const storageServiceCompat: StorageServiceCompat = new StorageServiceCompat(
     app,
-    new StorageService(app, authProvider, pool, url),
-    ref => new ReferenceCompat(ref, storageServiceCompat)
+    new StorageService(app, authProvider, pool, url)
   );
   return storageServiceCompat;
 }

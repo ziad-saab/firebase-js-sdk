@@ -21,7 +21,7 @@ import { StringFormat } from '../src/implementation/string';
 import { TaskEvent, TaskState } from '../src/implementation/taskenums';
 
 import { XhrIoPool } from '../src/implementation/xhriopool';
-import { ReferenceCompat as Reference, ReferenceCompat } from './reference';
+import { ReferenceCompat } from './reference';
 import { StorageServiceCompat } from './service';
 import { StorageService } from '../src/service';
 import * as types from '@firebase/storage-types';
@@ -51,8 +51,7 @@ function factory(
   // of creating a new one.
   const storageServiceCompat: StorageServiceCompat = new StorageServiceCompat(
     app,
-    new StorageService(app, authProvider, new XhrIoPool(), url),
-    ref => new ReferenceCompat(ref, storageServiceCompat)
+    new StorageService(app, authProvider, new XhrIoPool(), url)
   );
   return storageServiceCompat;
 }
@@ -64,7 +63,7 @@ export function registerStorage(instance: _FirebaseNamespace): void {
     TaskEvent,
     StringFormat,
     Storage: StorageService,
-    Reference
+    Reference: ReferenceCompat
   };
   instance.INTERNAL.registerComponent(
     new Component(STORAGE_TYPE, factory, ComponentType.PUBLIC)

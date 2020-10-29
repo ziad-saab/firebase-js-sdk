@@ -19,7 +19,6 @@ import * as types from '@firebase/storage-types';
 import { StorageService, isUrl, ref } from '../src/service';
 import { Location } from '../src/implementation/location';
 import { ReferenceCompat } from './reference';
-import { Reference } from '../src/reference';
 import { invalidArgument } from '../src/implementation/error';
 import { FirebaseApp } from '@firebase/app-types';
 
@@ -28,11 +27,7 @@ import { FirebaseApp } from '@firebase/app-types';
  * @param opt_url gs:// url to a custom Storage Bucket
  */
 export class StorageServiceCompat implements types.FirebaseStorage {
-  constructor(
-    public app: FirebaseApp,
-    readonly _delegate: StorageService,
-    private _referenceConverter: (ref: Reference) => ReferenceCompat
-  ) {}
+  constructor(public app: FirebaseApp, readonly _delegate: StorageService) {}
 
   INTERNAL = {
     /**
@@ -61,7 +56,7 @@ export class StorageServiceCompat implements types.FirebaseStorage {
         'ref() expected a child path but got a URL, use refFromURL instead.'
       );
     }
-    return this._referenceConverter(ref(this._delegate, path));
+    return new ReferenceCompat(ref(this._delegate, path), this);
   }
 
   /**
@@ -81,7 +76,7 @@ export class StorageServiceCompat implements types.FirebaseStorage {
         'refFromUrl() expected a valid full URL but got an invalid one.'
       );
     }
-    return this._referenceConverter(ref(this._delegate, url));
+    return new ReferenceCompat(ref(this._delegate, url), this);
   }
 
   setMaxUploadRetryTime(time: number): void {
