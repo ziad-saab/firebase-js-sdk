@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import json from 'rollup-plugin-json';
+import json from '@rollup/plugin-json';
 import typescriptPlugin from 'rollup-plugin-typescript2';
 import typescript from 'typescript';
 import pkgExp from './exp/package.json';
@@ -65,4 +65,4 @@ const browserBuilds = [
 ];
 
 // eslint-disable-next-line import/no-default-export
-export default [...nodeBuilds, ...browserBuilds];
+export default browserBuilds;
