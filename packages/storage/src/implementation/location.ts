@@ -19,9 +19,13 @@
  * @fileoverview Functionality related to the parsing/composition of bucket/
  * object location.
  */
+
 import { invalidDefaultBucket, invalidUrl } from './error';
 import { DEFAULT_HOST } from './constants';
 
+/**
+ * @public
+ */
 export class Location {
   private path_: string;
 

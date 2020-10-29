@@ -1,10 +1,10 @@
 {
   "name": "@firebase/storage/exp",
   "description": "A tree-shakeable version of the Storage SDK",
-  "main": "../dist/exp/index.browser.cjs.js",
-  "module": "../dist/exp/index.browser.esm2017.js",
-  "browser": "../dist/exp/index.browser.esm2017.js",
-  "typings": "./dist/exp/index.d.ts",
+  "main": "./dist/index.browser.cjs.js",
+  "module": "./dist/index.browser.esm2017.js",
+  "browser": "./dist/index.browser.esm2017.js",
+  "typings": "./dist/index.d.ts",
   "private": true,
   "dependencies": {
     "@firebase/app-exp": "0.0.800"

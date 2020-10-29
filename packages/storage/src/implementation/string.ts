@@ -18,7 +18,7 @@
 import { unknown, invalidFormat } from './error';
 
 /**
- * @enum {string}
+ * An enumeration of the possible string formats for upload.
  */
 export type StringFormat = string;
 export const StringFormat = {
@@ -28,6 +28,9 @@ export const StringFormat = {
   DATA_URL: 'data_url'
 };
 
+/**
+ * @internal
+ */
 export class StringData {
   contentType: string | null;
 

@@ -21,6 +21,10 @@ import { Reference } from './reference';
 /**
  * @fileoverview Documentation for the metadata format.
  */
+
+/**
+ * The full set of object metadata, including read-only properties.
+ */
 interface Metadata extends types.FullMetadata {
   type: string | undefined;
   md5Hash: string | undefined;

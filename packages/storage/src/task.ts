@@ -81,9 +81,9 @@ export class UploadTask {
   private _promise: Promise<UploadTaskSnapshot>;
 
   /**
-   * @param ref The firebaseStorage.Reference object this task came
+   * @param ref - The firebaseStorage.Reference object this task came
    *     from, untyped to avoid cyclic dependencies.
-   * @param blob The blob to upload.
+   * @param blob - The blob to upload.
    */
   constructor(ref: Reference, blob: FbsBlob, metadata: Metadata | null = null) {
     this._ref = ref;
@@ -443,7 +443,7 @@ export class UploadTask {
 
   /**
    * Adds a callback for an event.
-   * @param type The type of event to listen for.
+   * @param type - The type of event to listen for.
    */
   on(
     type: TaskEvent,
@@ -463,8 +463,8 @@ export class UploadTask {
   /**
    * This object behaves like a Promise, and resolves with its snapshot data
    * when the upload completes.
-   * @param onFulfilled The fulfillment callback. Promise chaining works as normal.
-   * @param onRejected The rejection callback.
+   * @param onFulfilled - The fulfillment callback. Promise chaining works as normal.
+   * @param onRejected - The rejection callback.
    */
   then<U>(
     onFulfilled?: ((value: UploadTaskSnapshot) => U | Promise<U>) | null,
@@ -570,7 +570,7 @@ export class UploadTask {
 
   /**
    * Resumes a paused task. Has no effect on a currently running or failed task.
-   * @return True if the operation took effect, false if ignored.
+   * @returns True if the operation took effect, false if ignored.
    */
   resume(): boolean {
     const valid =
@@ -584,7 +584,7 @@ export class UploadTask {
 
   /**
    * Pauses a currently running task. Has no effect on a paused or failed task.
-   * @return True if the operation took effect, false if ignored.
+   * @returns True if the operation took effect, false if ignored.
    */
   pause(): boolean {
     const valid = this._state === InternalTaskState.RUNNING;
@@ -597,7 +597,7 @@ export class UploadTask {
   /**
    * Cancels a currently running or paused task. Has no effect on a complete or
    * failed task.
-   * @return True if the operation took effect, false if ignored.
+   * @returns True if the operation took effect, false if ignored.
    */
   cancel(): boolean {
     const valid =

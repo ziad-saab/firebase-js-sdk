@@ -7,7 +7,8 @@
   "module": "dist/index.esm.js",
   "esm2017": "dist/index.esm2017.js",
   "files": [
-    "dist"
+    "dist",
+    "exp/dist"
   ],
   "scripts": {
     "lint": "eslint -c .eslintrc.js '**/*.ts' --ignore-path '../../.gitignore'",

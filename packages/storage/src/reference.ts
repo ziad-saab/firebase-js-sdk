@@ -18,6 +18,7 @@
 /**
  * @fileoverview Defines the Firebase Storage Reference class.
  */
+
 import { FbsBlob } from './implementation/blob';
 import { Location } from './implementation/location';
 import { getMappings } from './implementation/metadata';
@@ -296,7 +297,7 @@ export async function getMetadata(ref: Reference): Promise<Metadata> {
  *     setting a value to null will remove the metadata.
  * @returns A promise that resolves
  *     with the new metadata for this object.
- *     @see firebaseStorage.Reference.prototype.getMetadata
+ *     See `firebaseStorage.Reference.prototype.getMetadata`
  */
 export async function updateMetadata(
   ref: Reference,

@@ -79,18 +79,25 @@ function refFromPath(
   }
 }
 
+/**
+ * Returns a storage Reference for the given url.
+ * @param storage - `Storage` instance.
+ * @param url - URL. If empty, returns root reference.
+ * @public
+ */
 export function ref(storage: StorageService, url?: string): Reference;
+/**
+ * Returns a storage Reference for the given path in the
+ * default bucket.
+ * @param storageOrRef - `Storage` service or storage `Reference`.
+ * @param pathOrUrlStorage - path. If empty, returns root reference (if Storage
+ * instance provided) or returns same reference (if Reference provided).
+ * @public
+ */
 export function ref(
   storageOrRef: StorageService | Reference,
   path?: string
 ): Reference;
-/**
- * Returns a storage Reference for the given url, or given path in the
- * default bucket.
- * @param serviceOrRef - `Storage` instance or storage `Reference`.
- * @param pathOrUrlStorage - path, or URL. If empty, returns root reference (if Storage
- * instance provided) or returns same reference (if Reference provided).
- */
 export function ref(
   serviceOrRef: StorageService | Reference,
   pathOrUrl?: string
@@ -118,7 +125,7 @@ function extractBucket(config?: FirebaseOptions): Location | null {
 
 /**
  * A service that provides Firebase Storage Reference instances.
- * @param opt_url gs:// url to a custom Storage Bucket
+ * @param opt_url - gs:// url to a custom Storage Bucket
  */
 export class StorageService implements _FirebaseService {
   /**
@@ -216,8 +223,8 @@ export class StorageService implements _FirebaseService {
 
   /**
    * @internal
-   * @param requestInfo
-   * @param authToken
+   * @param requestInfo - HTTP RequestInfo object
+   * @param authToken - Firebase auth token
    */
   makeRequest<T>(
     requestInfo: RequestInfo<T>,

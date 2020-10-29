@@ -21,8 +21,15 @@ import { Reference } from './reference';
 /**
  * @fileoverview Documentation for ListOptions and ListResult format.
  */
+
+/**
+ * The options `list()` accepts.
+ */
 export interface ListOptions extends types.ListOptions {}
 
+/**
+ * Result returned by list().
+ */
 export interface ListResult {
   prefixes: Reference[];
   items: Reference[];

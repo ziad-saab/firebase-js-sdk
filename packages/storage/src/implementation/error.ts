@@ -53,9 +53,6 @@ export class FirebaseStorageError extends FirebaseError {
 
 export const errors = {};
 
-/**
- * @enum {string}
- */
 export type Code = string;
 export const Code = {
   // Shared between all platforms
@@ -288,7 +285,7 @@ export function appDeleted(): FirebaseStorageError {
 }
 
 /**
- * @param name The name of the operation that was invalid.
+ * @param name - The name of the operation that was invalid.
  */
 export function invalidRootOperation(name: string): FirebaseStorageError {
   return new FirebaseStorageError(
@@ -301,8 +298,8 @@ export function invalidRootOperation(name: string): FirebaseStorageError {
 }
 
 /**
- * @param format The format that was not valid.
- * @param message A message describing the format violation.
+ * @param format - The format that was not valid.
+ * @param message - A message describing the format violation.
  */
 export function invalidFormat(
   format: string,
@@ -315,7 +312,7 @@ export function invalidFormat(
 }
 
 /**
- * @param message A message describing the internal error.
+ * @param message - A message describing the internal error.
  */
 export function internalError(message: string): FirebaseStorageError {
   throw new FirebaseStorageError(
