@@ -1089,7 +1089,7 @@ apiDescribe('Database', (persistence: boolean) => {
     });
   });
 
-  it('can call terminate() multiple times', async () => {
+  it.only('can call terminate() multiple times', async () => {
     return withTestDb(persistence, async db => {
       await db.terminate();
       await db.terminate();
@@ -1124,7 +1124,7 @@ apiDescribe('Database', (persistence: boolean) => {
   );
 
   // eslint-disable-next-line no-restricted-properties
-  (persistence ? it : it.skip)(
+  (persistence ? it.only : it.skip)(
     'maintains persistence after restarting app',
     async () => {
       await withTestDoc(persistence, async docRef => {
@@ -1145,7 +1145,7 @@ apiDescribe('Database', (persistence: boolean) => {
   );
 
   // eslint-disable-next-line no-restricted-properties
-  (persistence ? it : it.skip)(
+  (persistence ? it.only : it.skip)(
     'can clear persistence if the client has been terminated',
     async () => {
       await withTestDoc(persistence, async docRef => {
