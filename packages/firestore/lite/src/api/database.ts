@@ -189,8 +189,8 @@ export class FirebaseFirestore implements _FirebaseService {
       throw new FirestoreError(
         Code.FAILED_PRECONDITION,
         'Firestore has already been started and its settings can no longer ' +
-          'be changed. initializeFirestore() cannot be called after calling ' +
-          'getFirestore().'
+          'be changed. You can only modify settings before calling any other ' +
+          'methods on a Firestore object..'
       );
     }
     this._settings = settings;
