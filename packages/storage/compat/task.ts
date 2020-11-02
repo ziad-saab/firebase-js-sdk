@@ -69,10 +69,33 @@ export class UploadTaskCompat implements types.UploadTask {
     error?: ErrorFn | null,
     completed?: CompleteFn | null
   ): Unsubscribe | Subscribe<UploadTaskSnapshotCompat> {
-    // TODO: Wrap all returned values in new snapshot
+    let wrappedNextOrObserver:
+      | StorageObserver<UploadTaskSnapshot>
+      | undefined
+      | ((a: UploadTaskSnapshot) => unknown) = undefined;
+    if (nextOrObserver != null) {
+      if (typeof nextOrObserver === 'function') {
+        wrappedNextOrObserver = (taskSnapshot: UploadTaskSnapshot) =>
+          nextOrObserver(
+            new UploadTaskSnapshotCompat(taskSnapshot, this, this._ref)
+          );
+      } else {
+        wrappedNextOrObserver = {
+          next:
+            nextOrObserver.next == null
+              ? undefined
+              : (taskSnapshot: UploadTaskSnapshot) =>
+                  nextOrObserver.next!(
+                    new UploadTaskSnapshotCompat(taskSnapshot, this, this._ref)
+                  ),
+          complete: nextOrObserver.complete || undefined,
+          error: nextOrObserver.error || undefined
+        };
+      }
+    }
     return this._delegate.on(
       type,
-      (nextOrObserver || undefined) as StorageObserver<UploadTaskSnapshot>,
+      wrappedNextOrObserver,
       error || undefined,
       completed || undefined
     );
