@@ -208,7 +208,7 @@ export class ReferenceCompat implements types.Reference {
   }
 
   private _throwIfRoot(name: string): void {
-    if (this._delegate.location.path === '') {
+    if (this._delegate._location.path === '') {
       throw invalidRootOperation(name);
     }
   }

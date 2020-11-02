@@ -184,7 +184,7 @@ export class UploadTask {
     this._resolveToken(authToken => {
       const requestInfo = fbsRequests.createResumableUpload(
         this._ref.storage,
-        this._ref.location,
+        this._ref._location,
         this._mappings,
         this._blob,
         this._metadata
@@ -209,7 +209,7 @@ export class UploadTask {
     this._resolveToken(authToken => {
       const requestInfo = fbsRequests.getResumableUploadStatus(
         this._ref.storage,
-        this._ref.location,
+        this._ref._location,
         url,
         this._blob
       );
@@ -245,7 +245,7 @@ export class UploadTask {
       let requestInfo;
       try {
         requestInfo = fbsRequests.continueResumableUpload(
-          this._ref.location,
+          this._ref._location,
           this._ref.storage,
           url,
           this._blob,
@@ -294,7 +294,7 @@ export class UploadTask {
     this._resolveToken(authToken => {
       const requestInfo = fbsRequests.getMetadata(
         this._ref.storage,
-        this._ref.location,
+        this._ref._location,
         this._mappings
       );
       const metadataRequest = this._ref.storage.makeRequest(
@@ -314,7 +314,7 @@ export class UploadTask {
     this._resolveToken(authToken => {
       const requestInfo = fbsRequests.multipartUpload(
         this._ref.storage,
-        this._ref.location,
+        this._ref._location,
         this._mappings,
         this._blob,
         this._metadata

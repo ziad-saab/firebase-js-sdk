@@ -57,13 +57,13 @@ export class Reference {
   /**
    * @internal
    */
-  location: Location;
+  _location: Location;
 
   constructor(private _service: StorageService, location: string | Location) {
     if (location instanceof Location) {
-      this.location = location;
+      this._location = location;
     } else {
-      this.location = Location.makeFromUrl(location);
+      this._location = Location.makeFromUrl(location);
     }
   }
 
@@ -73,7 +73,7 @@ export class Reference {
    * @override
    */
   toString(): string {
-    return 'gs://' + this.location.bucket + '/' + this.location.path;
+    return 'gs://' + this._location.bucket + '/' + this._location.path;
   }
 
   protected newRef(service: StorageService, location: Location): Reference {
@@ -85,20 +85,20 @@ export class Reference {
    *     object's bucket.
    */
   get root(): Reference {
-    const location = new Location(this.location.bucket, '');
+    const location = new Location(this._location.bucket, '');
     return this.newRef(this._service, location);
   }
 
   get bucket(): string {
-    return this.location.bucket;
+    return this._location.bucket;
   }
 
   get fullPath(): string {
-    return this.location.path;
+    return this._location.path;
   }
 
   get name(): string {
-    return lastComponent(this.location.path);
+    return lastComponent(this._location.path);
   }
 
   get storage(): StorageService {
@@ -106,16 +106,16 @@ export class Reference {
   }
 
   get parent(): Reference | null {
-    const newPath = parent(this.location.path);
+    const newPath = parent(this._location.path);
     if (newPath === null) {
       return null;
     }
-    const location = new Location(this.location.bucket, newPath);
+    const location = new Location(this._location.bucket, newPath);
     return new Reference(this._service, location);
   }
 
   _throwIfRoot(name: string): void {
-    if (this.location.path === '') {
+    if (this._location.path === '') {
       throw invalidRootOperation(name);
     }
   }
@@ -262,7 +262,7 @@ export async function list(
   const op = options || {};
   const requestInfo = requestsList(
     ref.storage,
-    ref.location,
+    ref._location,
     /*delimiter= */ '/',
     op.pageToken,
     op.maxResults
@@ -282,7 +282,7 @@ export async function getMetadata(ref: Reference): Promise<Metadata> {
   const authToken = await ref.storage.getAuthToken();
   const requestInfo = requestsGetMetadata(
     ref.storage,
-    ref.location,
+    ref._location,
     getMappings()
   );
   return ref.storage.makeRequest(requestInfo, authToken).getPromise();
@@ -307,7 +307,7 @@ export async function updateMetadata(
   const authToken = await ref.storage.getAuthToken();
   const requestInfo = requestsUpdateMetadata(
     ref.storage,
-    ref.location,
+    ref._location,
     metadata,
     getMappings()
   );
@@ -325,7 +325,7 @@ export async function getDownloadURL(ref: Reference): Promise<string> {
   const authToken = await ref.storage.getAuthToken();
   const requestInfo = requestsGetDownloadUrl(
     ref.storage,
-    ref.location,
+    ref._location,
     getMappings()
   );
   return ref.storage
@@ -348,7 +348,7 @@ export async function getDownloadURL(ref: Reference): Promise<string> {
 export async function deleteObject(ref: Reference): Promise<void> {
   ref._throwIfRoot('deleteObject');
   const authToken = await ref.storage.getAuthToken();
-  const requestInfo = requestsDeleteObject(ref.storage, ref.location);
+  const requestInfo = requestsDeleteObject(ref.storage, ref._location);
   return ref.storage.makeRequest(requestInfo, authToken).getPromise();
 }
 
@@ -363,7 +363,7 @@ export async function deleteObject(ref: Reference): Promise<void> {
  * slashes.
  */
 export function getChild(ref: Reference, childPath: string): Reference {
-  const newPath = child(ref.location.path, childPath);
-  const location = new Location(ref.location.bucket, newPath);
+  const newPath = child(ref._location.path, childPath);
+  const location = new Location(ref._location.bucket, newPath);
   return new Reference(ref.storage, location);
 }
