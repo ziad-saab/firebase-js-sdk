@@ -25,6 +25,7 @@ import {
   InstantiationMode
 } from '@firebase/component';
 
+//test
 import { version } from './package.json';
 import { Auth } from './src/auth';
 import { Persistence } from './src/persistence';
